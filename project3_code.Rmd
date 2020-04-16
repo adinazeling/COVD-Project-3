@@ -36,7 +36,7 @@ for (i in (case+1):dim(NY_dat)[1]) {
   j = j+1
 }
 
-#Check wherher logistic curve is good aproximation - cases
+#Check whether logistic curve is good aproximation - cases
 plot(ConfirmedCases ~ time_from_first_case, data = NY_dat) 
 
 #Initialize column - time from 1st death
@@ -58,7 +58,16 @@ plot(Fatalities ~ time_from_first_death, data = NY_dat)
 
 Estimation of logistic growth curve parameters:
 
-```{r curve_params}
+```{r curve_params, eval = F}
+mod <- lm(ConfirmedCases ~ time_from_first_case, data = NY_dat)
+coef(mod)
+r <- coef(mod)[1]
+K <- -r/coef(mod)[2]
+
+#Doesn't work, haha :(
+logisticModel <- nls(ConfirmedCases ~ K / (1 + exp(Po + r * time_from_first_case)), 
+                     data = NY_dat,
+                     start = list(Po = 0, r = K, K = 100000))
 
 ```
 
