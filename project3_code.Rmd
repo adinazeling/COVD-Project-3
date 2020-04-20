@@ -1,0 +1,82 @@
+---
+title: "Project 3 - COVID19 Model"
+author: "Margaret Gacheru, Joy Hsu, Melanie Mayer, Rachel Tsong, Adina Zhang"
+date: "4/16/2020"
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+Read in data:
+
+```{r data}
+covid19 <- read_csv("covid19-1.csv")
+```
+
+Explore data - NY Example:
+
+```{r explore}
+NY_dat = covid19 %>% filter(`Province/State` == "New York")
+
+#Initialize column - time from 1st case
+NY_dat$time_from_first_case <- rep(0, dim(NY_dat)[1])
+#Find location of first confirmed case
+case = sum(NY_dat$ConfirmedCases == 0)
+#Fill in column
+j = 1
+for (i in (case+1):dim(NY_dat)[1]) {
+  NY_dat$time_from_first_case[i] = j
+  j = j+1
+}
+
+#Check whether logistic curve is good aproximation - cases
+plot(ConfirmedCases ~ time_from_first_case, data = NY_dat) 
+
+#Initialize column - time from 1st death
+NY_dat$time_from_first_death <- rep(0, dim(NY_dat)[1])
+#Find location of first confirmed case
+deaths = sum(NY_dat$Fatalities == 0)
+#Fill in column
+j = 1
+for (i in (deaths+1):dim(NY_dat)[1]) {
+  NY_dat$time_from_first_death[i] = j
+  j = j+1
+}
+
+#Check wherher logistic curve is good aproximation - fatalities
+plot(Fatalities ~ time_from_first_death, data = NY_dat) 
+
+#Appears to have exponential growth, will try logistic growth model however
+```
+
+Estimation of logistic growth curve parameters:
+
+```{r curve_params, eval = F}
+mod <- lm(ConfirmedCases ~ time_from_first_case, data = NY_dat)
+coef(mod)
+r <- coef(mod)[1]
+K <- -r/coef(mod)[2]
+
+#Doesn't work, haha :(
+logisticModel <- nls(ConfirmedCases ~ K / (1 + exp(Po + r * time_from_first_case)), 
+                     data = NY_dat,
+                     start = list(Po = 0, r = K, K = 100000))
+
+```
+
+
+
+
+
+
+
+
+
+
