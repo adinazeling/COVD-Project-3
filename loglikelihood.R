@@ -25,13 +25,14 @@ func = function(t, y, a, b, c) {
   hess[3,3] = sum(((1 + expu) * (-b^2 * expu) + b^2 * expu * exp(-2)) / (1 + expu)^2)
   
   # Remainder of hessian matrix
-  # Not negative definite?
   for (i in 1:3) {
     for (j in 1:3) {
       if (i == j) {
         next()
+      } else if (i == 1 | j == 1) {
+        hess[i,j] = 0
       } else {
-        hess[i,j] = grad[i] * grad[j]
+        hess[i,j] = sum((-b * (t - c) * exp(-2) * expu - b^2 * expu * (1 + expu)) / (1 + expu)^2)
       }
     }
   }
