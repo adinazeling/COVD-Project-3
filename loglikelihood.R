@@ -3,7 +3,11 @@
 # t - days since first case
 # y - outcome
 # par - vector containing a, b, and c parameters
-func = function(t, y, a, b, c) {
+func = function(t, y, par) {
+  
+  a = par[1]
+  b = par[2]
+  c = par[3]
   
   # Expu
   expu = exp(-b * (t - c))
