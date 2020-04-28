@@ -172,12 +172,35 @@ Estimate Logistic Curve by Country/Region:
 #Find estimates per country of cases - premade R function
 cases_country_curves <- covid19_country %>%
   split(.$`Country/Region`) %>%
-  map(~drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = .))
+  map(~coefficients(drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = .)))
+
+cases_country_curves <- data.frame(matrix(unlist(cases_country_curves), nrow=length(cases_country_curves), byrow=T))
+
+cases_country_curves <- cbind(cases_country_curves, Country = levels(factor(covid19_country$`Country/Region`))) %>%
+  rename(B = "X1", A = "X2", C = "X3")
+
 
 #Find estimates per country of fatalities - premade R function
 #Fails to converge, use oy countries with time since first death >= 14
-fatalities_country_curves <- covid19_country %>%
-  filter(max(time_from_first_death) >= 14) %>% 
+covid19_country_fatal <- covid19_country %>%
+  filter(max(time_from_first_death) >= 14)
+fatalities_country_curves <- covid19_country_fatal %>% 
   split(.$`Country/Region`) %>%
   map(~coefficients(drm(Fatalities ~ time_from_first_death, fct = L.3(), data = .)))
+
+fatalities_country_curves <- data.frame(matrix(unlist(fatalities_country_curves), nrow=length(fatalities_country_curves), byrow=T))
+
+fatalities_country_curves <- cbind(fatalities_country_curves, Country = levels(factor(covid19_country_fatal$`Country/Region`))) %>%
+  rename(B = "X1", A = "X2", C = "X3")
 ```
+
+## Task 2. Clustering your fitted Curves
+
+
+
+
+
+
+
+
+
