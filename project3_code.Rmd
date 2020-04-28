@@ -50,26 +50,25 @@ for (i in (deaths+1):dim(NY_dat)[1]) {
   j = j+1
 }
 
-#Check wherher logistic curve is good aproximation - fatalities
+#Check whether logistic curve is good aproximation - fatalities
 plot(Fatalities ~ time_from_first_death, data = NY_dat) 
 
 #Appears to have exponential growth, will try logistic growth model however
 ```
 
-Estimation of logistic growth curve parameters:
+Estimation of logistic growth curve parameters using R functions:
 
 ```{r curve_params, eval = F}
-mod <- lm(ConfirmedCases ~ time_from_first_case, data = NY_dat)
-coef(mod)
-r <- coef(mod)[1]
-K <- -r/coef(mod)[2]
+require(drc)
 
-#Doesn't work, haha :(
-logisticModel <- nls(ConfirmedCases ~ K / (1 + exp(Po + r * time_from_first_case)), 
-                     data = NY_dat,
-                     start = list(Po = 0, r = K, K = 100000))
+model <- drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = NY_dat)
+plot(model, log="", main = "Logistic function")
+
+model <- drm(Fatalities ~ time_from_first_death, fct = L.3(), data = NY_dat)
+plot(model, log="", main = "Logistic function")
 
 ```
+
 
 Newton Raphson
 
@@ -148,10 +147,37 @@ path[dim(path)[1],]
 ```
 
 
+Create time from first case/fatality variables for entire dataset by Country/Region:
 
+```{r}
+#create desired variables, remove regions with less than 14 days with cases
+covid19_country <- covid19 %>%
+  group_by(`Country/Region`, Date) %>%
+  summarise(ConfirmedCases = sum(ConfirmedCases),
+            Fatalities = sum(Fatalities)) %>% 
+  filter(ConfirmedCases != 0) %>%
+  mutate(Date = as.Date(Date, format="%m/%d/%Y")) %>%
+  arrange(`Country/Region`, Date) %>%
+  mutate(
+    time_from_first_case = ifelse(ConfirmedCases >= 1, 1, 0),
+         time_from_first_case = cumsum(time_from_first_case),
+         time_from_first_death = ifelse(Fatalities >= 1, 1, 0),
+         time_from_first_death = cumsum(time_from_first_death)) %>%
+  filter(max(time_from_first_case) >= 14)
+```
 
+Estimate Logistic Curve by Country/Region:
 
+```{r}
+#Find estimates per country of cases - premade R function
+cases_country_curves <- covid19_country %>%
+  split(.$`Country/Region`) %>%
+  map(~drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = .))
 
-
-
-
+#Find estimates per country of fatalities - premade R function
+#Fails to converge, use oy countries with time since first death >= 14
+fatalities_country_curves <- covid19_country %>%
+  filter(max(time_from_first_death) >= 14) %>% 
+  split(.$`Country/Region`) %>%
+  map(~coefficients(drm(Fatalities ~ time_from_first_death, fct = L.3(), data = .)))
+```
