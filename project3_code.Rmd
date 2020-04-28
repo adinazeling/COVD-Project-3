@@ -12,6 +12,7 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+require(drc)
 ```
 
 Read in data:
@@ -59,12 +60,10 @@ plot(Fatalities ~ time_from_first_death, data = NY_dat)
 Estimation of logistic growth curve parameters using R functions:
 
 ```{r curve_params, eval = F}
-require(drc)
-
-model <- drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = NY_dat)
+model <- drc::drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = NY_dat)
 plot(model, log="", main = "Logistic function")
 
-model <- drm(Fatalities ~ time_from_first_death, fct = L.3(), data = NY_dat)
+model <- drc::drm(Fatalities ~ time_from_first_death, fct = L.3(), data = NY_dat)
 plot(model, log="", main = "Logistic function")
 
 ```
@@ -72,7 +71,7 @@ plot(model, log="", main = "Logistic function")
 
 Newton Raphson
 
-```{r }
+```{r,eval=F}
 
 NewtonRaphson = function(data, main_function, start, tol = 1e-10, maxiter = 200) {
   #convert data into matrix form
@@ -149,7 +148,7 @@ path[dim(path)[1],]
 
 Create time from first case/fatality variables for entire dataset by Country/Region:
 
-```{r}
+```{r data_cleaning}
 #create desired variables, remove regions with less than 14 days with cases
 covid19_country <- covid19 %>%
   group_by(`Country/Region`, Date) %>%
@@ -168,7 +167,7 @@ covid19_country <- covid19 %>%
 
 Estimate Logistic Curve by Country/Region:
 
-```{r}
+```{r estimates}
 #Find estimates per country of cases - premade R function
 cases_country_curves <- covid19_country %>%
   split(.$`Country/Region`) %>%
@@ -196,11 +195,58 @@ fatalities_country_curves <- cbind(fatalities_country_curves, Country = levels(f
 
 ## Task 2. Clustering your fitted Curves
 
+#### K-mean Clustering:
 
+- K clusters: $C_{1}, C_{2}, ...., C_{k}$
+- Want to minimize within cluster correlation: minimize $$\sum_{k=1}^{K} W(C_{k})$$
+- Define within cluster variance using the squared Euclidian distance:  $$W(C_{k}) = \frac{1}{|x|}\sum_{i,i' \in C_k}\sum_{j=1}^p(x_{ij}-x_{i'j})^2$$ where $|C_{k}|$ is the number of observations in cluster k
 
+Algorithm:
 
+1. Randomly choose k observations, use chosen observations' p observed values as centroid
+2. Assign each observation to the cluster whose centroid is closest based on sum of p Euclidian distances
+3. Compute p * k cluster means
+3. Iterate step 2 & 3 until stop changing
 
+```{r kmean}
+kmeans_cluster <- function(X, k){
+  #X: data frame
+  #k: number of clusters desired
+  p <- dim(X)[2]  # number of parameters
+  n <- dim(X)[1]  # number of observations
+  delta <- 1
+  iter <- 0 
+  itermax <- 30
+  while(delta > 1e-4 && iter <= itermax){
+    if(iter == 0){
+      centroid <- X[sample(n, k),] #Initiate, randomly pick three observations, use values as centroid
+      centroid_mem <- centroid
+    }
+    
+    d <- sapply(1:k, function(c) sapply(1:n, 
+      function(i) sum((centroid[c,] - X[i,])^2))) #sum of p Euclidian distances from k centroids per obs 
+    
+    cluster <- apply(d, 1, which.min) #Place obs. in cluster with smallest distance
+    
+    centroid <- t(sapply(1:k, function(c) 
+      apply(X[cluster == c,], 2, mean))) # Compute new k*p centroids
+    
+    delta <- sum((centroid - centroid_mem)^2) #Check converegence
+    iter <- iter + 1 
+    centroid_mem <- centroid
+  }
+  X = cbind(X, cluster = cluster)
+  return(list(centroid = centroid, cluster = cluster, df = X))
+}
 
+# run K-means
+km <- kmeans_cluster(cases_country_curves[,1:3], 2)
+pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
+summary(factor(km$cluster))
 
-
+#Compare to package
+km_pkg <- kmeans(cases_country_curves[,1:3], 2)
+summary(factor(km_pkg$cluster))
+km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
+```
 
