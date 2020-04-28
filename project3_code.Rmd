@@ -69,6 +69,7 @@ plot(model, log="", main = "Logistic function")
 ```
 
 
+<<<<<<< HEAD
 Newton Raphson
 
 ```{r,eval=F}
@@ -146,6 +147,8 @@ path[dim(path)[1],]
 ```
 
 
+=======
+>>>>>>> e2d7d00615101bff851fe44db00b010e3c594b24
 Create time from first case/fatality variables for entire dataset by Country/Region:
 
 ```{r data_cleaning}
