@@ -67,11 +67,11 @@ NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
   return(res)
 }
 
-test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
+test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(179, 10, 10), maxiter = 1000)
 test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
 
 data = tibble(x = seq(0, 50, 1),
-              y = (1000 / (1 + exp(-0.4 * (x - 20)))))
+              y = (99.986 / (1 + exp(-5.35 * (x - 11.51)))))
 
 data %>% ggplot(aes(x = x, y = y)) + geom_point()
 ```
@@ -82,11 +82,11 @@ newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, deca
   # calculate the initial gradient, Hessian matrix and negative loglike funtion
   optimization = func(t, y, beta)
   step = 1
-  previous_loglik = -optimization$loglik
+  previous_loss = -optimization$loss
 
   # start the interations to optimize the beta
   while (TRUE) {
-    print(paste("step:", step, "  negative loglike loss:", -optimization$loglik))
+    print(paste("step:", step, " loss:", -optimization$loss))
    
     # set initial lambda at this step equals to the parameters, this variable will change in havling step
     lambda = lambda_init
@@ -97,13 +97,13 @@ newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, deca
       }, error = function(err) {return(beta)})
 
     
-    # calculate gradient, Hessian and loglike   
+    # calculate gradient, Hessian and losse   
     optimization = func(t, y, beta_new)
    
     
     # havling steps start only when it optimizes at opposite direction.
     # if it optimizes at opposite direction, lambda will be havled to make the step smaller. 
-    while (previous_loglik <= -optimization$loglik) {
+    while (previous_loss <= -optimization$loss) {
       lambda = lambda * decay_rate # lambda decay
       
       # same reason to use try-catch
@@ -116,16 +116,16 @@ newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, deca
       optimization = func(t, y, beta_new)
       
       # if the optimized differences are too small, end up the function and return beta. 
-      if ((previous_loglik - -optimization$loglik) <= tol)
+      if ((previous_loss - -optimization$loss) <= tol)
         return(beta)
     }
     
     # if the differences calculated from normal calculation or havling steps are too small, end up the function and return beta. 
-    if (abs(previous_loglik - -optimization$loglik) <= tol)
+    if (abs(previous_loss - -optimization$loss) <= tol)
       return(beta)
     
-    # save the negative loglike value at this step and will be used as previous loglike value at next step.
-    previous_loglik = -optimization$loglik
+    # save the negative losse value at this step and will be used as previous losse value at next step.
+    previous_loss = -optimization$loss
     
     # if the function is not ended up, then the new beta is valid. save it.
     beta = beta_new 
@@ -143,6 +143,6 @@ newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, deca
 ```
 
 ```{r}
-test = newton_optimize(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(1, 1, 1))
+test = newton_optimize(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
 ```
 
