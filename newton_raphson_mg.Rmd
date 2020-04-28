@@ -1,3 +1,16 @@
+---
+title: "newton_raphson_mg"
+author: "Margaret Gacheru - mg3861"
+date: "4/28/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
 # Write a function that generates loss, gradient and Hessian
 # Inputs: 
 # t - days since first case
@@ -30,25 +43,31 @@ func = function(t, y, par) {
   
   # Second derivative matrix
   d2loss = matrix(0, 3, 3)
-  d2loss[1,1] = sum( y / (1 + expu) - ( 1/( 1+expu) )^2 )
+  d2loss[1,1] = -sum( y / (1 + expu) - ( 1/( 1+expu) )^2 )
   d2loss[1,2] = -sum( (y*(c-t)*expu) / (1+expu)^2 ) - sum( (2*a*(c-t)*expu) / (1+expu)^3 )
   d2loss[1,3] = -sum( (y*b*expu) / (1+expu)^2 ) - sum( (2*a*b*expu) / (1+expu)^3 )
-    
-  d2loss[1,2] = sum(y - (a / (1 + expu)) %*% t((-(c - t) * expu) / (expu + 1)^2))
-  d2loss[1,3] = sum(y - (a / (1 + expu)) %*% t((-b * expu) / (expu + 1)^2))
-  d2loss[2,3] = sum(y - (a / (1 + expu)) %*% t((a * b * (c - t) * expu) / (expu + 1)^2 - (2 * a * b * (c - t) * expu * exp(-2)) / (expu + 1)^3 + (a * expu) / (expu + 1)^2))
+  d2loss[2,2] = sum( (a*y* exp(b*c + b*t) * (exp(t*b) - exp(c*b)) * (c-t)^2) / (exp(c*b) + exp(t*b))^3 ) + sum( (a*a*expu*(2*expu - 1)*(c-t)^2) / (1+expu)^4 )
+  d2loss[2,3] = sum( (a*y*expu*(expu*(b*c - t*b - 1) - c*b + t*b - 1)) / (1+expu)^3 ) + sum( (a*a*expu*(expu*(2*b*c - 2*t*b - 1) - c*b + t*b - 1)) / (1+expu)^4 )
+  d2loss[3,3] = sum( (a*b*b*y*exp(b*t + b*c)*(exp(b*t) - exp(b*c))) / (exp(b*t) + exp(b*c))^3 ) + sum( (a*a*b*b*expu*(2*expu -1)) / (1+expu)^4 )
   d2loss[2,1] = d2loss[1,2]
   d2loss[3,1] = d2loss[1,3]
   d2loss[3,2] = d2loss[2,3]  
   
-  # Hessian
-  hess = matrix(0, 3, 3)
-  for (i in 1:3) {
-    for (j in 1:3) {
-      hess[i,j] = sum(matrix(d1loss[[i]]) %*% t(matrix(d1loss[[j]]))) - d2loss[i,j]
-    }
-  }
+  hess = d2loss
   
   return(list(loss = loss, grad = grad, Hess = hess)) 
 }
+
+
+```
+
+Test out func()
+
+```{r}
+
+check = func(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
+
+test = newton_optimize(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
+
+```
 
