@@ -1,0 +1,148 @@
+---
+title: "Untitled"
+author: "Adina Zhang"
+date: "April 24, 2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+source("loglikelihood.R")
+library(matlib)
+```
+
+```{r}
+# Half-Stepping and ascent gradients
+NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
+  
+  # Initiate starting values
+  i = 0
+  cur = start
+  stuff = func(t, y, cur)
+  res = c(0, stuff$loss, cur)
+  currloss = stuff$loss
+  prevloss = -Inf
+  
+  # Iterations to update the losslihood
+  while (i < maxiter && abs(currloss - prevloss) > tol) {
+    # Update step
+    i = i + 1
+    step = 1
+    print(paste("step:", i, "  loss:", stuff$loss))
+    
+    # Assign previous log likelihoods and betas
+    prevloss = currloss
+    prev = cur
+    
+    # Next step of log likelihood
+    cur = prev - step * solve(stuff$Hess) %*% stuff$grad
+    
+    # New losslihood, gradient, and Hessian 
+    stuff = func(t, y, cur)
+    currloss = stuff$loss
+    
+    # Ascent direction check
+    ascent_dir = -t(stuff$grad) %*% solve(stuff$Hess) %*% stuff$grad
+    if (ascent_dir < 0) {
+      max_eigen = max(eigen(stuff$Hess)$values)
+      Hess_new = stuff$Hess - (max_eigen + 0.1)
+    } else {Hess_new = stuff$Hess}
+    
+    # Half-step check
+    if (currloss > prevloss) {
+      res = rbind(res, c(i, stuff$loss, cur))
+    }
+    else {
+      while (currloss < prevloss) {
+        step = step * (1/2)
+        cur = prev - step * solve(Hess_new) %*% stuff$grad
+        stuff = func(t, y, cur)
+        currloss = stuff$loss
+        }
+    
+      res = rbind(res, c(i, stuff$loss, cur))
+    } 
+    
+  }
+  return(res)
+}
+
+test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
+test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
+
+data = tibble(x = seq(0, 50, 1),
+              y = (1000 / (1 + exp(-0.4 * (x - 20)))))
+
+data %>% ggplot(aes(x = x, y = y)) + geom_point()
+```
+
+```{r}
+newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, decay_rate = 0.5){
+  
+  # calculate the initial gradient, Hessian matrix and negative loglike funtion
+  optimization = func(t, y, beta)
+  step = 1
+  previous_loglik = -optimization$loglik
+
+  # start the interations to optimize the beta
+  while (TRUE) {
+    print(paste("step:", step, "  negative loglike loss:", -optimization$loglik))
+   
+    # set initial lambda at this step equals to the parameters, this variable will change in havling step
+    lambda = lambda_init
+    
+    # since there maybe some issues when calculate new beta, so we use try-catch sentence. If some errors ocurr, the beta will be kept as the beta at last step.
+    beta_new <- tryCatch({
+        beta - lambda * inv(optimization$Hess) %*% optimization$grad # calculate new beta, if no errors, the result will be given to variable "beta_new" 
+      }, error = function(err) {return(beta)})
+
+    
+    # calculate gradient, Hessian and loglike   
+    optimization = func(t, y, beta_new)
+   
+    
+    # havling steps start only when it optimizes at opposite direction.
+    # if it optimizes at opposite direction, lambda will be havled to make the step smaller. 
+    while (previous_loglik <= -optimization$loglik) {
+      lambda = lambda * decay_rate # lambda decay
+      
+      # same reason to use try-catch
+      # but if errors occur, although beta keeps, the lambda will be havled at next step, makes the result different.
+      beta_new <- tryCatch({
+        beta - lambda * inv(optimization$Hess) %*% optimization$grad
+      }, error = function(err) {return(beta)})
+      
+      # optimize by decayed lambda
+      optimization = func(t, y, beta_new)
+      
+      # if the optimized differences are too small, end up the function and return beta. 
+      if ((previous_loglik - -optimization$loglik) <= tol)
+        return(beta)
+    }
+    
+    # if the differences calculated from normal calculation or havling steps are too small, end up the function and return beta. 
+    if (abs(previous_loglik - -optimization$loglik) <= tol)
+      return(beta)
+    
+    # save the negative loglike value at this step and will be used as previous loglike value at next step.
+    previous_loglik = -optimization$loglik
+    
+    # if the function is not ended up, then the new beta is valid. save it.
+    beta = beta_new 
+    
+    step = step + 1
+  }
+  
+  # so the loop will be ended up by 2 conditions.
+  # 1. the differences calculated by havling steps are too small.
+  # 2. the differences calculated by normal optimization are too small.
+  return(beta)
+}
+
+
+```
+
+```{r}
+test = newton_optimize(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(1, 1, 1))
+```
+
