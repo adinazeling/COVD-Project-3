@@ -1,0 +1,6 @@
+---
+title: "GMM_KS"
+author: "Kee-Young Shin"
+date: "4/29/2020"
+output: html_document
+---
