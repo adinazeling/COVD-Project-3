@@ -66,7 +66,9 @@ NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
   }
   return(res)
 }
+```
 
+```{r}
 test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(179, 10, 10), maxiter = 1000)
 test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
 
@@ -146,3 +148,69 @@ newton_optimize = function(t, y, beta = NULL, tol = 0.001, lambda_init = 1, deca
 test = newton_optimize(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
 ```
 
+```{r}
+# Fisher's Information
+Fisher = function(t, y, start, tol = 1e-10, maxiter = 200){
+  
+  # Initiate starting values
+  i = 0
+  cur = start
+  stuff = func(t, y, cur)
+  res = c(0, stuff$loss, cur)
+  currloss = stuff$loss
+  prevloss = -Inf
+  
+  # Iterations to update the losslihood
+  while (i < maxiter && abs(currloss - prevloss) > tol) {
+    # Update step
+    i = i + 1
+    step = 1
+    print(paste("step:", i, "  loss:", stuff$loss))
+    
+    # Assign previous log likelihoods and betas
+    prevloss = currloss
+    prev = cur
+    
+    # Next step of log likelihood
+    cur = prev - step * inv(stuff$info) %*% stuff$grad
+    
+    # New losslihood, gradient, and Hessian 
+    stuff = func(t, y, cur)
+    currloss = stuff$loss
+    
+    # Ascent direction check
+    ascent_dir = -t(stuff$grad) %*% inv(stuff$info) %*% stuff$grad
+    if (ascent_dir < 0) {
+      max_eigen = max(eigen(stuff$info)$values)
+      info_new = stuff$info - (max_eigen + 0.1)
+    } else {info_new = stuff$info}
+    
+    # Half-step check
+    if (currloss > prevloss) {
+      res = rbind(res, c(i, stuff$loss, cur))
+    }
+    else {
+      while (currloss < prevloss) {
+        step = step * (1/2)
+        cur = prev - step * inv(info_new) %*% stuff$grad
+        stuff = func(t, y, cur)
+        currloss = stuff$loss
+        }
+    
+      res = rbind(res, c(i, stuff$loss, cur))
+    } 
+    
+  }
+  return(res)
+}
+```
+
+```{r}
+test1 = Fisher(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(20, 10, 10), maxiter = 1000)
+test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
+
+data = tibble(x = seq(0, 50, 1),
+              y = (99.986 / (1 + exp(-5.35 * (x - 11.51)))))
+
+data %>% ggplot(aes(x = x, y = y)) + geom_point()
+```
