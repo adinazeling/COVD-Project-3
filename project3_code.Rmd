@@ -251,5 +251,6 @@ summary(factor(km$cluster))
 km_pkg <- kmeans(cases_country_curves[,1:3], 2)
 summary(factor(km_pkg$cluster))
 km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
+
 ```
 

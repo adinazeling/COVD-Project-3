@@ -145,31 +145,14 @@ NewtonRaphson = function(y, t, main_function, start, tol = 1e-10, maxiter = 200)
     prevlik_grad_hess = lik_grad_hess #time step i - 1
     prevloglik = prevlik_grad_hess$loglik
     prev = cur #step i - 1
-
     
-    #ensure that the direction of the step is in ascent direction
-    d_grad = - t(prevlik_grad_hess$grad) %*% ginv(prevlik_grad_hess$Hess, 2.9876e-18 ) %*% (prevlik_grad_hess$grad)
-    
-    #max_eig = max(eigen(prevlik_grad_hess$Hess)$values)
-    n = ncol(prevlik_grad_hess$Hess)
-    gamma = 0.01
-     
-    #while (d_grad <= 0){
-      
-     # prevlik_grad_hess$Hess = prevlik_grad_hess$Hess - gamma*diag(n)
-      
-      #d_grad = - t(prevlik_grad_hess$grad) %*% ginv(prevlik_grad_hess$Hess, 2.9876e-18 ) %*% (prevlik_grad_hess$grad)
-      
-      #gamma = gamma + 0.01
-    #}
-    
-    cur = prev - ginv(prevlik_grad_hess$Hess, 2.9876e-18) %*% prevlik_grad_hess$grad #step find theta for step i 
+    cur = prev + ginv(prevlik_grad_hess$Hess, 2.9876e-18) %*% prevlik_grad_hess$grad #step find theta for step i 
     lik_grad_hess = main_function(t, y, cur) #update log-lik, gradient, Hessian for step i 
 
     while (lik_grad_hess$loglik < prevloglik) {
       
       step = 0.5*step
-      cur = prev - step * ginv(prevlik_grad_hess$Hess, 2.9876e-18) %*% prevlik_grad_hess$grad
+      cur = prev + step * diag(3) %*% prevlik_grad_hess$grad
       lik_grad_hess = main_function(t, y, cur)
 
       }
@@ -194,7 +177,8 @@ Test out func()
 check = func(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
 
 test = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
-NewtonRaphson(NY_dat$ConfirmedCases, NY_dat$time_from_first_case, func, c(1,1, 1))
+
+NewtonRaphson(NY_dat$ConfirmedCases, NY_dat$time_from_first_case, func, c(100,100, 100))
 
 ```
 
