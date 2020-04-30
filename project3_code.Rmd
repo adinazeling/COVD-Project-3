@@ -173,8 +173,14 @@ km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
 
 ```
 
+
+The Gaussian Mixture Model was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters. 
+
+In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. 
+
+
 ```{r}
-# Uses EM algorithm with multivariate normal
+# EM algorithm 
 # distribution to estimate cluster probability
 mvnorm_covinv = function(Sigma) {
   # Eigendecomposition of covariance matrix
