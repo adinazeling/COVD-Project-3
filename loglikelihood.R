@@ -11,22 +11,31 @@ func = function(t, y, par) {
   
   # Expu
   expu = exp(-b * (t - c))
+  expu[expu == Inf] = 100000000
   
   # Loss function
   loss = (1/2) * sum(y - (a / (1 + expu)))^2
   
   # First derivative matrix
+  p = (expu / (1 + expu))
+  
   d1loss = vector(mode = "list")
   d1loss[[1]] = (1 / (1 + expu))
-  d1loss[[2]] = (a * (c - t) * expu) / (1 + expu)^2
-  d1loss[[3]] = (a * b * expu) / (1 + expu)^2
+  d1loss[[2]] = a * (c - t) * (1 / (1 + expu)) * p
+  d1loss[[3]] = a * b * (1 / (1 + expu)) * p
   
   # Gradient
   grad = vector(mode = "numeric", length = 3)
   
+<<<<<<< HEAD
+  grad[[1]] = -sum(y - (a / (1 + expu)) * d1loss[[1]])
+  grad[[2]] = sum(y - (a / (1 + expu)) * d1loss[[2]])
+  grad[[3]] = sum(y - (a / (1 + expu)) * d1loss[[3]])
+=======
   grad[[1]] = -sum((y - (a / (1 + expu)) * d1loss[[1]]))
   grad[[2]] = -sum((y - (a / (1 + expu)) * d1loss[[2]]))
   grad[[3]] = -sum((y - (a / (1 + expu)) * d1loss[[3]]))
+>>>>>>> fea1b915f0c384de764ef0b125633724dd1f2f3c
   
   # Second derivative matrix
   d2loss = matrix(0, 3, 3)
@@ -57,6 +66,6 @@ func = function(t, y, par) {
   }
   
   
-  return(list(loss = loss, grad = grad, Hess = hess, info = info)) 
+  return(list(loss = -loss, grad = grad, Hess = hess, identity = diag(3), info = info)) 
 }
 

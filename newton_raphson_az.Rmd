@@ -9,6 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 source("loglikelihood.R")
 library(matlib)
+library(MASS)
 ```
 
 ```{r}
@@ -35,33 +36,29 @@ NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
     prev = cur
     
     # Next step of log likelihood
-    cur = prev - step * solve(stuff$Hess) %*% stuff$grad
+    cur = prev + step * stuff$identity %*% stuff$grad
     
     # New losslihood, gradient, and Hessian 
     stuff = func(t, y, cur)
     currloss = stuff$loss
     
     # Ascent direction check
-    ascent_dir = -t(stuff$grad) %*% solve(stuff$Hess) %*% stuff$grad
-    if (ascent_dir < 0) {
-      max_eigen = max(eigen(stuff$Hess)$values)
-      Hess_new = stuff$Hess - (max_eigen + 0.1)
-    } else {Hess_new = stuff$Hess}
+    #ascent_dir = -t(stuff$grad) %*% ginv(stuff$Hess) %*% stuff$grad
+    #if (ascent_dir < 0) {
+      #max_eigen = max(eigen(stuff$Hess)$values)
+      #Hess_new = stuff$Hess - (max_eigen + 0.1)
+    #} else {Hess_new = stuff$Hess}
     
     # Half-step check
-    if (currloss > prevloss) {
-      res = rbind(res, c(i, stuff$loss, cur))
+    print(paste("I LOVE MARGARET:", currloss, " ,", prevloss))
+    while (currloss < prevloss) {
+      step = step * (1/2)
+      cur = prev + step * stuff$identity %*% stuff$grad
+      stuff = func(t, y, cur)
+      currloss = stuff$loss
     }
-    else {
-      while (currloss < prevloss) {
-        step = step * (1/2)
-        cur = prev - step * solve(Hess_new) %*% stuff$grad
-        stuff = func(t, y, cur)
-        currloss = stuff$loss
-        }
     
-      res = rbind(res, c(i, stuff$loss, cur))
-    } 
+    res = rbind(res, c(i, stuff$loss, cur))
     
   }
   return(res)
@@ -69,7 +66,7 @@ NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
 ```
 
 ```{r}
-test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(179, 10, 10), maxiter = 1000)
+test1 = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(37024, -0.5,13), maxiter = 1000)
 test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
 
 data = tibble(x = seq(0, 50, 1),
@@ -172,14 +169,14 @@ Fisher = function(t, y, start, tol = 1e-10, maxiter = 200){
     prev = cur
     
     # Next step of log likelihood
-    cur = prev - step * inv(stuff$info) %*% stuff$grad
+    cur = prev - step * ginv(stuff$info) %*% stuff$grad
     
     # New losslihood, gradient, and Hessian 
     stuff = func(t, y, cur)
     currloss = stuff$loss
     
     # Ascent direction check
-    ascent_dir = -t(stuff$grad) %*% inv(stuff$info) %*% stuff$grad
+    ascent_dir = -t(stuff$grad) %*% ginv(stuff$info) %*% stuff$grad
     if (ascent_dir < 0) {
       max_eigen = max(eigen(stuff$info)$values)
       info_new = stuff$info - (max_eigen + 0.1)
@@ -192,7 +189,7 @@ Fisher = function(t, y, start, tol = 1e-10, maxiter = 200){
     else {
       while (currloss < prevloss) {
         step = step * (1/2)
-        cur = prev - step * inv(info_new) %*% stuff$grad
+        cur = prev - step * ginv(info_new) %*% stuff$grad
         stuff = func(t, y, cur)
         currloss = stuff$loss
         }
@@ -206,8 +203,8 @@ Fisher = function(t, y, start, tol = 1e-10, maxiter = 200){
 ```
 
 ```{r}
-test1 = Fisher(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(20, 10, 10), maxiter = 1000)
-test2 = NR_modify(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1, 1, 1))
+test1 = Fisher(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(1000, 30, 30), maxiter = 1000)
+test2 = Fisher(NY_dat$time_from_first_case, NY_dat$Fatalities, c(1000, 1, 1))
 
 data = tibble(x = seq(0, 50, 1),
               y = (99.986 / (1 + exp(-5.35 * (x - 11.51)))))
