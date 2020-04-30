@@ -174,9 +174,17 @@ km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
 ```
 
 
-The Gaussian Mixture Model was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters. 
+The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters.Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
 
-In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. 
+In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. The expectation can be represented as follows:
+$$E[Z_i=1|x_i, \theta^{(t)}]=P(Z_i=1|x_i, \theta^{(t)}) = \frac{p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}{(1-p^{(t)})f(x_i, \mu^{(t)}_1, \sum^{(t)}_1)+p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}$$
+with $Z_i$ indicating the cluster. So if $Z_i=1$ then $X_i$ would be from the $MVN(\mu_2, \sum_2)$ distribution. 
+
+
+The second step is the Maximizing step wherein the likelihood function is maximized to update the parameters. More specificaly, the cluster probabilities (i.e. the weight signifiying how much each cluster represents the data points), cluster means, and cluster covariance matrices will be updated. The equations for the parameters are as follows:
+
+
+These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. 
 
 
 ```{r}
