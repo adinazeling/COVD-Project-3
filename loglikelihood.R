@@ -27,9 +27,15 @@ func = function(t, y, par) {
   # Gradient
   grad = vector(mode = "numeric", length = 3)
   
+<<<<<<< HEAD
   grad[[1]] = -sum(y - (a / (1 + expu)) * d1loss[[1]])
   grad[[2]] = sum(y - (a / (1 + expu)) * d1loss[[2]])
   grad[[3]] = sum(y - (a / (1 + expu)) * d1loss[[3]])
+=======
+  grad[[1]] = -sum((y - (a / (1 + expu)) * d1loss[[1]]))
+  grad[[2]] = -sum((y - (a / (1 + expu)) * d1loss[[2]]))
+  grad[[3]] = -sum((y - (a / (1 + expu)) * d1loss[[3]]))
+>>>>>>> fea1b915f0c384de764ef0b125633724dd1f2f3c
   
   # Second derivative matrix
   d2loss = matrix(0, 3, 3)

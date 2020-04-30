@@ -1,13 +1,42 @@
 ---
 title: "newton_raphson_mg"
-author: "Margaret Gacheru - mg3861"
 date: "4/28/2020"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+require(drc)
+
 ```
+
+First use US data:
+
+```{r explore}
+covid19 <- read_csv("covid19-1.csv")
+
+covid19_country <- covid19 %>%
+  group_by(`Country/Region`, Date) %>%
+  summarise(ConfirmedCases = sum(ConfirmedCases),
+            Fatalities = sum(Fatalities)) %>% 
+  filter(ConfirmedCases != 0) %>%
+  mutate(Date = as.Date(Date, format="%m/%d/%Y")) %>%
+  arrange(`Country/Region`, Date) %>%
+  mutate(
+    time_from_first_case = ifelse(ConfirmedCases >= 1, 1, 0),
+         time_from_first_case = cumsum(time_from_first_case),
+         time_from_first_death = ifelse(Fatalities >= 1, 1, 0),
+         time_from_first_death = cumsum(time_from_first_death)) %>%
+  filter(max(time_from_first_case) >= 14)
+
+US_dat = covid19_country%>%
+  filter(`Country/Region` == "US")
+
+```
+
+Function that generates loss, gradient, and hessian
 
 ```{r}
 
@@ -25,6 +54,9 @@ func = function(t, y, par) {
   # Expu
   expu = exp(-b * (t - c))
   
+  #avoid issues with grad = NaN and loss = Inf
+  expu[expu == Inf] = 1000000000000
+  
   # Loss function
   loss = -(1/2) * sum(y - (a / (1 + expu)))^2
   
@@ -37,25 +69,13 @@ func = function(t, y, par) {
   # Gradient
   grad = vector(mode = "numeric", length = 3)
   
-  grad[[1]] = -sum(y - (a / (1 + expu)) * d1loss[[1]])
-  grad[[2]] = sum(y - (a / (1 + expu)) * d1loss[[2]])
-  grad[[3]] = sum(y - (a / (1 + expu)) * d1loss[[3]])
-  
-  # Second derivative matrix
-  d2loss = matrix(0, 3, 3)
-  d2loss[1,1] = sum( ( 1/( 1+expu) )^2 )
-  d2loss[1,2] = sum( (y*(c-t)*expu) / (1+expu)^2 ) + sum( (2*a*(c-t)*expu) / (1+expu)^3 )
-  d2loss[1,3] = sum( (y*b*expu) / (1+expu)^2 ) + sum( (2*a*b*expu) / (1+expu)^3 )
-  d2loss[2,2] = sum( (a*y* exp(b*c + b*t) * (exp(t*b) - exp(c*b)) * (c-t)^2) / (exp(c*b) + exp(t*b))^3 ) + sum( (a*a*expu*(2*expu - 1)*(c-t)^2) / (1+expu)^4 )
-  d2loss[2,3] = sum( (a*y*expu*(expu*(b*c - t*b - 1) - c*b + t*b - 1)) / (1+expu)^3 ) + sum( (a*a*expu*(expu*(2*b*c - 2*t*b - 1) - c*b + t*b - 1)) / (1+expu)^4 )
-  d2loss[3,3] = sum( (a*b*b*y*exp(b*t + b*c)*(exp(b*t) - exp(b*c))) / (exp(b*t) + exp(b*c))^3 ) + sum( (a*a*b*b*expu*(2*expu -1)) / (1+expu)^4 )
-  d2loss[2,1] = d2loss[1,2]
-  d2loss[3,1] = d2loss[1,3]
-  d2loss[3,2] = d2loss[2,3]  
+  grad[[1]] = -sum((y - (a / (1 + expu)) * d1loss[[1]]))
+  grad[[2]] = sum((y - (a / (1 + expu)) * d1loss[[2]]))
+  grad[[3]] = sum((y - (a / (1 + expu)) * d1loss[[3]]))
   
   hess = diag(3)
   
-  return(list(loglik = loss, grad = grad, Hess = hess)) 
+  return(list(loss = loss, grad = grad, Hess = hess)) 
 }
 
 
@@ -64,120 +84,54 @@ func = function(t, y, par) {
 Newton Raphson
 
 ```{r}
-# Half-Stepping and ascent gradients
-NR_modify = function(t, y, start, tol = 1e-10, maxiter = 200){
-  
-  # Initiate starting values
-  i = 0
-  cur = start
-  stuff = func(t, y, cur)
-  res = c(0, stuff$loss, cur)
-  currloss = stuff$loss
-  prevloss = -Inf
-  
-  # Iterations to update the losslihood
-  while (i < maxiter && abs(currloss - prevloss) > tol) {
-    # Update step
-    i = i + 1
-    step = 1
-    print(paste("step:", i, "  loss:", stuff$loss))
-    
-    # Assign previous log likelihoods and betas
-    prevloss = currloss
-    prev = cur
-    
-    # Next step of log likelihood
-    cur = prev - step * solve(stuff$Hess) %*% stuff$grad
-    
-    # New losslihood, gradient, and Hessian 
-    stuff = func(t, y, cur)
-    currloss = stuff$loss
-    
-    # Ascent direction check
-    ascent_dir = -t(stuff$grad) %*% solve(stuff$Hess) %*% stuff$grad
-    if (ascent_dir < 0) {
-      
-      max_eigen = max(eigen(stuff$Hess)$values)
-      Hess_new = stuff$Hess - (max_eigen + 0.1)
-      
-      } else {Hess_new = stuff$Hess}
-    
-    # Half-step check
-    if (currloss > prevloss) {
-      res = rbind(res, c(i, stuff$loss, cur))
-    }
-    else {
-      while (currloss < prevloss) {
-        step = step * (1/2)
-        cur = prev - step * solve(Hess_new) %*% stuff$grad
-        stuff = func(t, y, cur)
-        currloss = stuff$loss
-        }
-    
-      res = rbind(res, c(i, stuff$loss, cur))
-    } 
-    
-  }
-  return(res)
-}
-```
-
-Version 2 of Newton Raphson
-
-```{r}
 
 NewtonRaphson = function(y, t, main_function, start, tol = 1e-10, maxiter = 200) {
  
   i = 0
   cur = start
   lik_grad_hess = main_function(t, y, cur)
-  res = c(0, lik_grad_hess$loglik, cur)
+  res = c(0, lik_grad_hess$loss, cur)
   step = 1
 
-  prevloglik = -Inf # To make sure it iterates
+  prevloss = -Inf # To make sure it iterates
   
-  diff_loglik = abs(lik_grad_hess$loglik - prevloglik)
-  #if (is.nan(diff_loglik)) { diff_loglik <- 1e-2 }
+  diff_loss = abs(lik_grad_hess$loss - prevloss)
+  #if (is.nan(diff_loss)) { diff_loss <- 1e-2 }
   
-  while(i < maxiter && diff_loglik > tol) {
+  while(i < maxiter && diff_loss > tol) {
     i = i + 1
     
     prevlik_grad_hess = lik_grad_hess #time step i - 1
-    prevloglik = prevlik_grad_hess$loglik
+    prevloss = prevlik_grad_hess$loss
     prev = cur #step i - 1
-
     
     #ensure that the direction of the step is in ascent direction
-    d_grad = - t(prevlik_grad_hess$grad) %*% ginv(prevlik_grad_hess$Hess, 2.9876e-18 ) %*% (prevlik_grad_hess$grad)
-    
-    #max_eig = max(eigen(prevlik_grad_hess$Hess)$values)
+    d_grad = - t(prevlik_grad_hess$grad) %*% prevlik_grad_hess$Hess %*% (prevlik_grad_hess$grad)
     n = ncol(prevlik_grad_hess$Hess)
-    gamma = 0.01
-     
-    #while (d_grad <= 0){
-      
-     # prevlik_grad_hess$Hess = prevlik_grad_hess$Hess - gamma*diag(n)
-      
-      #d_grad = - t(prevlik_grad_hess$grad) %*% ginv(prevlik_grad_hess$Hess, 2.9876e-18 ) %*% (prevlik_grad_hess$grad)
-      
-      #gamma = gamma + 0.01
-    #}
     
-    cur = prev - ginv(prevlik_grad_hess$Hess, 2.9876e-18) %*% prevlik_grad_hess$grad #step find theta for step i 
+    if (d_grad <= 0){
+      
+      max_eigen = max(eigen(lik_grad_hess$Hess)$values)
+      prevlik_grad_hess$Hess = prevlik_grad_hess$Hess - (max_eigen + 0.1)*diag(n)
+      
+    }
+    
+    cur = prev - prevlik_grad_hess$Hess %*% prevlik_grad_hess$grad #step find theta for step i 
     lik_grad_hess = main_function(t, y, cur) #update log-lik, gradient, Hessian for step i 
-
-    while (lik_grad_hess$loglik < prevloglik) {
+  
+    #half-step check
+    while (lik_grad_hess$loss < prevloss) {
       
       step = 0.5*step
-      cur = prev - step * ginv(prevlik_grad_hess$Hess, 2.9876e-18) %*% prevlik_grad_hess$grad
+      cur = prev - step * lik_grad_hess$Hess %*% prevlik_grad_hess$grad
       lik_grad_hess = main_function(t, y, cur)
 
       }
     
-    res = rbind(res, c(i, lik_grad_hess$loglik, cur)) 
+    res = rbind(res, c(i, lik_grad_hess$loss, cur)) 
     
-    diff_loglik = abs(lik_grad_hess$loglik - prevloglik)
-    if (is.nan(diff_loglik)) { diff_loglik <- 1e-2 }
+    diff_loss = abs(lik_grad_hess$loss - prevloss)
+    if (is.nan(diff_loss)) { diff_loss <- 1e-2 }
     
     }
   
@@ -186,15 +140,71 @@ NewtonRaphson = function(y, t, main_function, start, tol = 1e-10, maxiter = 200)
   }
 ```
 
-
-Test out func()
+Test newton raphson function: estimates for a, b, c very different depending on the start value (even with a small change)
 
 ```{r}
 
-check = func(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
+#what the data looks like and what would be reasonable choices for a, b, c
+x = US_dat$time_from_first_case
+plot(x = US_dat$time_from_first_case, y = US_dat$ConfirmedCases)
+lines(x, 1000000/(1+exp(-0.4*(x - 36))))
 
-test = NR_modify(NY_dat$time_from_first_case, NY_dat$ConfirmedCases, c(10, 10, 10))
-NewtonRaphson(NY_dat$ConfirmedCases, NY_dat$time_from_first_case, func, c(1,1, 1))
+#possible "right answer": a = 1000000, b = 0.4, c = 36
+
+#this works
+test1 = NewtonRaphson(y = US_dat$ConfirmedCases, t = US_dat$time_from_first_case, func, c(1000000, 0.35, 40))
+colnames(test1) = c("iteration","-loss", "a", "b", "c")
+test1
+
+#this sort of works
+test2 = NewtonRaphson(y = US_dat$ConfirmedCases, t = US_dat$time_from_first_case, func, c(1000000, 0.4, 70))
+colnames(test2) = c("iteration","-loss", "a", "b", "c")
+test2
+
+#this breaks
+test3 = NewtonRaphson(y = US_dat$ConfirmedCases, t = US_dat$time_from_first_case, func, c(1000000, 2, 50))
+colnames(test3) = c("iteration","-loss", "a", "b", "c")
+test3
+
+#this breaks
+test4 = NewtonRaphson(y = US_dat$ConfirmedCases, t = US_dat$time_from_first_case, func, c(1000000, 0.1, 40))
+colnames(test4) = c("iteration","-loss", "a", "b", "c")
+test4
+
+```
+
+
+```{r}
+
+Chick.1 <- ChickWeight[ChickWeight$Chick == 1, ]
+SSlogis(Chick.1$Time, 368, 14, 6)  # response only
+local({
+  Asym <- 368; xmid <- 14; scal <- 6
+  SSlogis(Chick.1$Time, Asym, xmid, scal) # response _and_ gradient
+})
+getInitial(weight ~ SSlogis(Time, Asym, xmid, scal), data = Chick.1)
+## Initial values are in fact the converged one here, "Number of iter...: 0" :
+fm1 <- nls(weight ~ SSlogis(Time, Asym, xmid, scal), data = Chick.1)
+summary(fm1)
+## but are slightly improved here:
+fm2 <- update(fm1, control=nls.control(tol = 1e-9, warnOnly=TRUE), trace = TRUE)
+all.equal(coef(fm1), coef(fm2)) # "Mean relative difference: 9.6e-6"
+str(fm2$convInfo) # 3 iterations
+# }
+# NOT RUN {
+
+# }
+```
+
+nls
+
+```{r}
+
+x = c(60, 80, 100, 140, 160, 180)
+y = c(24.0688, 26.3774, 25.1653, 15.7559, 12.4160, 15.5849)
+
+df = data.frame(x=x, y=y)
+nls(y ~ SSlogis(x, Asym, xmid, scal), df)
 
 ```
 
