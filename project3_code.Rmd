@@ -252,12 +252,24 @@ Apply k-mean algorithm
 ```{r kmean}
 # run K-means
 load("par_new.RData")
-km <- kmeans_cluster(par_new[ ,6:8], 2)
-pairs(par_new[ ,6:8], lower.panel = NULL, col = km$cluster)
+km <- kmeans_cluster(par_new[ ,6:8], 4)
+
+plot_kclusters <- pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("red", "cornflowerblue", "purple", "green")[km$cluster],
+      bg = c("red", "green3"))
+
+save.image(plot_kclusters, "kmeans_plot.jpg")
+
+
+png(filename="kmeans_plot.png")
+
 summary(factor(km$cluster))
 
+
 #Compare to package
-km_pkg <- kmeans(par_new[ ,6:8], 2)
+km_pkg <- kmeans(par_new[ ,6:8], 4)
 summary(factor(km_pkg$cluster))
 
 #Explore cluster
@@ -277,8 +289,13 @@ par_new <- par_new %>% ungroup %>% mutate(cluster = as.factor(cluster))
 sPDF <- joinCountryData2Map(data.frame(par_new), joinCode = "NAME", nameJoinColumn = "Country")
 mapCountryData(sPDF, nameColumnToPlot = "cluster" , addLegend = FALSE, 
                catMethod = 'categorical',
-               colourPalette=c('light blue','purple'),
-               mapTitle = "Countries by Cluster")
+               colourPalette=c("red", "cornflowerblue", "purple", "yellow"),
+               mapTitle = " ")
+
+country_names <- par_new %>%
+  filter(newA > 50000)
+
+text(x=country_names$Long_avg, y=country_names$Lat_avg, labels = country_names$Country, cex = 0.7)
 
 
 ```
