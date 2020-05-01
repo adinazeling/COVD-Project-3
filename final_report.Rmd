@@ -85,8 +85,11 @@ with $Z_i$ indicating the cluster. So if $Z_i=1$ then $X_i$ would be from the $M
 
 The second step is the Maximizing step wherein the likelihood function is maximized to update the parameters. More specificaly, the cluster probabilities (i.e. the weight signifiying how much each cluster represents the data points), cluster means, and cluster covariance matrices will be updated. The equations for the parameters are as follows:
 
+$$p^{(t+1)}=\frac{\sum Z_i}{N}$$
+$$$$
 
-These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. 
+
+These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. 
 
 
 ## Results
