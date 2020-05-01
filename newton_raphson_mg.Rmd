@@ -300,13 +300,13 @@ gen_cases = function(country, a, b, c) {
 
 # Generate plot data for all countries
 predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
-for (i in dim(par_new)[1]) {
+for (i in 1:109) {
   a = as.numeric(par_new[i,6])
   b = as.numeric(par_new[i,7])
   c = as.numeric(par_new[i,8])
   country = as.character(par_new[i,1])
   data = gen_cases(country, a, b, c)
-  predict_case = rbind(predict_case, data)
+  predict_case = bind_rows(predict_case, data)
 }
 ```
 
