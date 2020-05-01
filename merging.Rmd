@@ -1,0 +1,34 @@
+---
+title: "Merging the current datasets"
+author: "Margaret Gacheru, Melanie Mayer, Adina Zhang"
+date: "5/1/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(httr)
+
+day3_10 = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-10-2020.csv", header=T)
+
+day3_11 = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-11-2020.csv", header = T)
+
+check = rbind(day3_10, day3_11)
+
+final = NULL
+for (i in 10:20) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))
+  
+  final = rbind(final, data)
+}
+```
+
