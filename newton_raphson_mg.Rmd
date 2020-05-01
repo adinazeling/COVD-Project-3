@@ -243,8 +243,16 @@ par_new = covid19_country %>%
   pmap(predict) %>% 
   tibble() %>% 
   rename(new_par = ".") 
+
 # Join with Country names
 par_new = bind_cols(covid19_country, par_new)
+par_new = par_new %>% unnest(new_par) %>% 
+  group_by(Country) %>% 
+  mutate(n = row_number()) %>% 
+  pivot_wider(names_from = n, values_from = new_par) %>% 
+  rename(newA = `1`,
+         newB = `2`,
+         newC = `3`)
 ```
 
 ```{r}
@@ -278,5 +286,22 @@ data %>%
   ggplot(aes(x = x, y = y)) + 
   geom_point() + 
   theme_bw()
+```
+
+```{r}
+# Function that generates data
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 100, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in dim(par_new)[1]) {
+  data = gen_cases(par_new[i,1], par_new[i,6], par_new[i,7], par_new[i,8])
+  predict_case = rbind(predict_case, data)
+}
 ```
 
