@@ -2,6 +2,8 @@
 title: "newton_raphson_mg"
 date: "4/28/2020"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -253,6 +255,9 @@ par_new = par_new %>% unnest(new_par) %>%
   rename(newA = `1`,
          newB = `2`,
          newC = `3`)
+
+
+save(par_new, file = "par_new.RData")
 ```
 
 ```{r}
