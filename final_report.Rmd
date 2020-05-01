@@ -14,6 +14,8 @@ require(drc)
 
 ## Introduction
 
+COVID-19 is currently the world's largest public health crisis. One of the many challenges presented by the pandemic has been the ability to understand and predict the trajectory of disease. Being able to estimate values including expected total cases and fatalities, growth rate, and peak of infection greatly affects a nation's decisions and course of action.
+
 ## Methods
 
 ### Predicting disease trajectory
