@@ -90,6 +90,10 @@ These two steps are repeated iteratively until the parameters converge (change l
 
 ### Clustering
 
-We have estimated logistic growth curves for 109 countries. We explored different clustering values and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
+We have estimated logistic growth curves for 109 countries. We explored different clustering values using K-means clustering and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
+
+Since the K-means algorithm for k=3 produced only one point in cluster 1, we ran the GMM EM algorithm using k=2. The results showed that 78 observations were placed in cluster 1 while the remaining 31 observations were in cluster 2. 
+
+
 
 ## Discusions

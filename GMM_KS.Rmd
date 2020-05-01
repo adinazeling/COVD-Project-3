@@ -83,6 +83,9 @@ pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
 summary(factor(km$cluster))
 gmm$cluster
 km1$cluster
+
+# for three clusters
+gmm2 = gmm_clustering(cases_country_curves[,1:3], 3)
 ```
 
 ```{r}
