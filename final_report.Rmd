@@ -32,8 +32,6 @@ The logistic growth curve has been traditionally applied to model epidemics and 
 
 ## Methods
 
-# Methods
-
 ### Predicting disease trajectory
 
 For the three-parameter logistic growth function, we can use least squares method to estimate the parameters a, b, and c. We define the objective function as the residual sum of squares and we can utilize Newton Raphson to find the optimal values that minimize this function. 
