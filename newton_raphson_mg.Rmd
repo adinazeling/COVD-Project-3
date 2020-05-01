@@ -270,13 +270,15 @@ new_covid = new_covid %>%
   summarise(Confirmed = sum(Confirmed),
             Deaths = sum(Deaths)) %>% 
   filter(Confirmed != 0) %>%
-  mutate(Date = as.Date(Last_Update, format="%m/%d/%Y")) %>%
-  arrange(`Country_Region`, Last_Update) %>%
+  mutate(Date = as.POSIXct(Last_Update)) %>%
+  arrange(`Country_Region`, Date) %>%
   mutate(time_from_first_case = ifelse(Confirmed >= 1, 1, 0),
          time_from_first_case = cumsum(time_from_first_case),
          time_from_first_death = ifelse(Deaths>= 1, 1, 0),
          time_from_first_death = cumsum(time_from_first_death)) %>%
   filter(max(time_from_first_case) >= 14)
+
+
 ```
 
 
@@ -313,5 +315,15 @@ for (i in 1:109) {
   data = gen_cases(country, a, b, c)
   predict_case = bind_rows(predict_case, data)
 }
+```
+
+```{r}
+plot1 = plot1 %>% 
+  ggplot(aes(x = x, y = y, color = country)) + 
+  geom_point() +
+  labs(title = "Estimated Logistic Growth Curves for Countries with 50000+ Confirmed Cases",
+       x = "Time from first case",
+       y = "Confirmed Cases") + 
+  theme_bw()
 ```
 
