@@ -126,15 +126,28 @@ knitr::include_graphics('./growth_curves1.jpeg')
 
 *Figure 2. k = 4 clusters scatter plots for three parameters*
 
-```{r fig2, echo = FALSE, fig.align='center', out.width = "70%", dpi = 72}
+```{r fig2, echo = FALSE, fig.align='center', out.width = "50%", dpi = 72}
 knitr::include_graphics('./kmeans_plot.png')
 ```
 
 
 *Figure 3.*
 
-```{r fig3, echo = FALSE, fig.align='center', out.width = "100%"}
-knitr::include_graphics('./kmeans_map.png')
+```{r fig3, echo = FALSE, fig.align='center', out.width = "90%"}
+knitr::include_graphics('./gkmeans_map.png')
+```
+
+*Figure 4.*
+
+```{r fig4, echo = FALSE, fig.align='center', out.width = "90%"}
+knitr::include_graphics('./gmm_plot.png')
+```
+
+
+*Figure 5.*
+
+```{r fig5, echo = FALSE, fig.align='center', out.width = "90%"}
+knitr::include_graphics('./gmm_map.png')
 ```
 
 

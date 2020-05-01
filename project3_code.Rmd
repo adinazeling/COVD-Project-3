@@ -243,7 +243,7 @@ kmeans_cluster <- function(X, k){
   }
   
   X = cbind(X, cluster = cluster)
-  return(list(centroid = centroid, cluster = cluster, df = X))
+  return(list(centroid = centroid, cluster = cluster))
 }
 ```
 
@@ -257,7 +257,7 @@ km <- kmeans_cluster(par_new[ ,6:8], 4)
 plot_kclusters <- pairs(par_new[ ,6:8], 
       labels = c("a", "b", "c"),
       lower.panel = NULL, 
-      col = c("red", "cornflowerblue", "purple", "green")[km$cluster],
+      col = c("orange", "yellow", "red", "dark red")[km$cluster],
       bg = c("red", "green3"))
 
 save.image(plot_kclusters, "kmeans_plot.jpg")
@@ -289,7 +289,7 @@ par_new <- par_new %>% ungroup %>% mutate(cluster = as.factor(cluster))
 sPDF <- joinCountryData2Map(data.frame(par_new), joinCode = "NAME", nameJoinColumn = "Country")
 mapCountryData(sPDF, nameColumnToPlot = "cluster" , addLegend = FALSE, 
                catMethod = 'categorical',
-               colourPalette=c("red", "cornflowerblue", "purple", "yellow"),
+               colourPalette=c("orange", "yellow", "red", "dark red"),
                mapTitle = " ")
 
 country_names <- par_new %>%
@@ -382,8 +382,47 @@ gmm_clustering = function(X, k){
 }
 
 # run for two clusters
-gmm = gmm_clustering(cases_country_curves[,1:3], 2)
+gmm = gmm_clustering(par_new[ ,6:8], 4)
 gmm$cluster
 km$cluster
+```
+
+
+
+```{r}
+#Use premade package
+library(mclust)
+ggm_pkg <- Mclust(par_new[ ,6:8], 4)
+plot(Mclust(par_new[ ,6:8], 4), what = "classification")
+
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("orange", "yellow", "red", "dark red")[ggm_pkg$classification],
+      bg = c("red", "green3"))
+
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = ggm_pkg$classification,
+      bg = c("red", "green3"))
+
+summary(factor(ggm_pkg$classification))
+
+
+#Explore cluster
+par_new <- cbind(par_new, ggm_cluster = ggm_pkg$classification, 
+                 prob1 = ggm_pkg$z[,1], pro2 = ggm_pkg$z[,2], prob3 = ggm_pkg$z[,3], prob4 = ggm_pkg$z[,4])
+
+
+sPDF2 <- joinCountryData2Map(data.frame(par_new), joinCode = "NAME", nameJoinColumn = "Country")
+mapCountryData(sPDF2, nameColumnToPlot = "prob4" , addLegend = FALSE,
+             #  colourPalette=c("red", "cornflowerblue", "purple", "yellow"),
+               mapTitle = " ")
+
+text(x=country_names$Long_avg, y=country_names$Lat_avg, labels = country_names$Country, cex = 0.7)
+
+
+
 ```
 
