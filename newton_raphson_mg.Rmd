@@ -243,9 +243,37 @@ par_new = covid19_country %>%
   pmap(predict) %>% 
   tibble() %>% 
   rename(new_par = ".") 
+
 # Join with Country names
 par_new = bind_cols(covid19_country, par_new)
+par_new = par_new %>% unnest(new_par) %>% 
+  group_by(Country) %>% 
+  mutate(n = row_number()) %>% 
+  pivot_wider(names_from = n, values_from = new_par) %>% 
+  rename(newA = `1`,
+         newB = `2`,
+         newC = `3`)
 ```
+
+```{r}
+# Load newest version of data
+new_covid = read.delim("./covid19-04-30-2020.txt", header = T, sep = ",") %>% 
+  as.data.frame()
+
+new_covid = new_covid %>% 
+  group_by(`Country_Region`, Last_Update) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths)) %>% 
+  filter(Confirmed != 0) %>%
+  mutate(Date = as.Date(Last_Update, format="%m/%d/%Y")) %>%
+  arrange(`Country_Region`, Last_Update) %>%
+  mutate(time_from_first_case = ifelse(Confirmed >= 1, 1, 0),
+         time_from_first_case = cumsum(time_from_first_case),
+         time_from_first_death = ifelse(Deaths>= 1, 1, 0),
+         time_from_first_death = cumsum(time_from_first_death)) %>%
+  filter(max(time_from_first_case) >= 14)
+```
+
 
 ```{r}
 # Select plots of a few countries
@@ -259,5 +287,26 @@ data %>%
   ggplot(aes(x = x, y = y)) + 
   geom_point() + 
   theme_bw()
+```
+
+```{r}
+# Function that generates data
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 100, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
 ```
 
