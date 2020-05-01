@@ -208,7 +208,7 @@ Algorithm:
 3. Compute p * k cluster means
 3. Iterate step 2 & 3 until stop changing
 
-```{r kmean}
+```{r kmean_alg}
 kmeans_cluster <- function(X, k){
   #X: data frame
   #k: number of clusters desired
@@ -225,16 +225,15 @@ kmeans_cluster <- function(X, k){
     distance <- NULL
     for (i in 1:k) { #sum of p Euclidian distances from k centroids per obs
       dist <- (map2_df(X, centroid[i,], `-`))^2 %>%
-        mutate(dist = A + B + C) %>%
-        dplyr::select(dist)
-      distance <- bind_cols(distance, dist)
+        rowSums()
+      distance <- cbind(distance, dist)
     }
     
     cluster <- apply(distance, 1, which.min) #Place obs. in cluster with smallest distance
   
     centroid <- NULL
     for (i in 1:k) { # Compute new k*p centroids
-      mean <- X[cluster == i,] %>% summarise(B = mean(B), A = mean(A), C = mean(C))
+      mean <- X[cluster == i,]  %>% summarise_all(list(~mean(.)))
       centroid = rbind(centroid, mean)
     }
 
@@ -244,25 +243,60 @@ kmeans_cluster <- function(X, k){
   }
   
   X = cbind(X, cluster = cluster)
-  return(list(centroid = centroid, cluster = cluster, df = X))
+  return(list(centroid = centroid, cluster = cluster))
 }
+```
 
+Apply k-mean algorithm 
+
+```{r kmean}
 # run K-means
-km <- kmeans_cluster(cases_country_curves[,1:3], 2)
-pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
+load("par_new.RData")
+km <- kmeans_cluster(par_new[ ,6:8], 4)
+
+plot_kclusters <- pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("orange", "yellow", "red", "dark red")[km$cluster],
+      bg = c("red", "green3"))
+
+save.image(plot_kclusters, "kmeans_plot.jpg")
+
+
+png(filename="kmeans_plot.png")
+
 summary(factor(km$cluster))
 
-km_vec <- cbind(cases_country_curves, cluster = km$cluster)
-covid19_select <- covid19 %>% 
-  rename(Country = 'Country/Region') %>%
-  dplyr::select(c(Country, Lat, Long))
-  
-test <- inner_join(km_vec, covid19_select) %>% distinct()
 
 #Compare to package
-km_pkg <- kmeans(cases_country_curves[,1:3], 2)
+km_pkg <- kmeans(par_new[ ,6:8], 4)
 summary(factor(km_pkg$cluster))
-km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
+
+#Explore cluster
+par_new <- cbind(par_new, cluster = km$cluster)
+covid19_select <- covid19 %>% 
+  rename(Country = 'Country/Region') %>%
+  dplyr::select(c(Country, Lat, Long)) %>%
+  group_by(Country) %>%
+  summarise(Lat_avg = mean(Lat),
+            sd_Lat = sd(Lat),
+            Long_avg = mean(Long),
+            sd_Long = sd(Long))
+par_new <- inner_join(par_new, covid19_select, by = "Country")
+par_new <- par_new %>% ungroup %>% mutate(cluster = as.factor(cluster))
+
+
+sPDF <- joinCountryData2Map(data.frame(par_new), joinCode = "NAME", nameJoinColumn = "Country")
+mapCountryData(sPDF, nameColumnToPlot = "cluster" , addLegend = FALSE, 
+               catMethod = 'categorical',
+               colourPalette=c("orange", "yellow", "red", "dark red"),
+               mapTitle = " ")
+
+country_names <- par_new %>%
+  filter(newA > 50000)
+
+text(x=country_names$Long_avg, y=country_names$Lat_avg, labels = country_names$Country, cex = 0.7)
+
 
 ```
 
@@ -348,8 +382,47 @@ gmm_clustering = function(X, k){
 }
 
 # run for two clusters
-gmm = gmm_clustering(cases_country_curves[,1:3], 2)
+gmm = gmm_clustering(par_new[ ,6:8], 4)
 gmm$cluster
 km$cluster
+```
+
+
+
+```{r}
+#Use premade package
+library(mclust)
+ggm_pkg <- Mclust(par_new[ ,6:8], 4)
+plot(Mclust(par_new[ ,6:8], 4), what = "classification")
+
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("orange", "yellow", "red", "dark red")[ggm_pkg$classification],
+      bg = c("red", "green3"))
+
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = ggm_pkg$classification,
+      bg = c("red", "green3"))
+
+summary(factor(ggm_pkg$classification))
+
+
+#Explore cluster
+par_new <- cbind(par_new, ggm_cluster = ggm_pkg$classification, 
+                 prob1 = ggm_pkg$z[,1], pro2 = ggm_pkg$z[,2], prob3 = ggm_pkg$z[,3], prob4 = ggm_pkg$z[,4])
+
+
+sPDF2 <- joinCountryData2Map(data.frame(par_new), joinCode = "NAME", nameJoinColumn = "Country")
+mapCountryData(sPDF2, nameColumnToPlot = "prob4" , addLegend = FALSE,
+             #  colourPalette=c("red", "cornflowerblue", "purple", "yellow"),
+               mapTitle = " ")
+
+text(x=country_names$Long_avg, y=country_names$Lat_avg, labels = country_names$Country, cex = 0.7)
+
+
+
 ```
 
