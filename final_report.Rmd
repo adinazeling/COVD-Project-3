@@ -25,7 +25,6 @@ It is of interest to public health experts to see which countries are having sim
  
 To begin this minimization process, K observations are randomly chosen and their observed predictors values are used to initiate the centroid for each cluster. The K centroids will be p dimensional, where p is the dimension of the variables given to the algorithm to create the clusters. In our case p = 3 ($\hat{a}$, $\hat{b}$, and $\hat{c}$). Each observation is then assigned to the cluster for which it has the smallest distance to the centroid. We chose to use Euclidian distance, such that the distance to the centroid of each cluster per observation is measured as $\sum_{j=1}^p(x_{ij}-\bar{x}_{j})^2$ for observation i (i = 1,...,n). The centroid for the $k^{th}$ cluster is then recomputed as the p averages of the observations in each cluster. These steps are repeated until the clusters stop changing. 
 
-We have estimated logistic growth curves for 109 countries. We explored different clustering values and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
 
 ## Methods
 
@@ -89,6 +88,7 @@ These two steps are repeated iteratively until the parameters converge (change l
 
 ## Results
 
+<<<<<<< HEAD
 ### Parameter Predictions
 
 Figure 1 shows the estimated logistic growth curves from countries estimated to have more than 50,000 confirmed cases. Israel stands out as having both a relative steep slope as well as its high number of estimated cases. Taiwan and Singapore are included in the plot because their estimated total cases is greater than 50,000, but within a 100 days they never reach this peak because the growth rate is so small. 
@@ -96,6 +96,13 @@ Figure 1 shows the estimated logistic growth curves from countries estimated to 
 In total, 63 countries had already passed their estimated midpoints of the disease. These countries included Italy (c = 51.7), Iran (c = 25.9), Germany (c = 55.5), and Spain (c = 52.7) which are all locations of large outbreaks. The remaining 46 countries had yet to reach or were approaching their disease peaks. This included the United States which were just approaching their estimated midpoint (c = 30.3). Nepal was estimated to have the longest time to disease peak (c = 284.2) while the Maldives were estimated to have the shortest time to disease peak (c = 3.56). Only Togo had a growth rate greater than 1 (b = 2.04). The next largest growth rates belong to Turkey (b = 0.867) and Cote d'Ivoire (b = 0.751). Nepal had the lowest growth rate (b = 0.00595) followed by the Vatican City (0.056).
 
 ![Figure 1]("./growth_curves1.jpeg")
+=======
+### Clustering
+
+We have estimated logistic growth curves for 109 countries. We explored different clustering values using K-means clustering and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
+
+Since the K-means algorithm for k=3 produced only one point in cluster 1, we ran the GMM EM algorithm using k=2. The results showed that 78 observations were placed in cluster 1 while the remaining 31 observations were in cluster 2. 
+>>>>>>> fa3eaaf675d25661b950516b217a0b7fc9e6d841
 
 
 

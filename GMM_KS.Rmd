@@ -83,6 +83,9 @@ pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
 summary(factor(km$cluster))
 gmm$cluster
 km1$cluster
+
+# for three clusters
+gmm2 = gmm_clustering(cases_country_curves[,1:3], 3)
 ```
 
 ```{r}
@@ -156,6 +159,26 @@ gmm_clustering = function(X, k){
 
 ```
 
+
+```{r}
+library(plot3D)
+cluster_df = cbind(cases_country_curves, cluster = gmm$cluster)
+scatter3D(cluster_df$C, cluster_df$A, cluster_df$B)
+scatter3D(cluster_df$C, cluster_df$A, cluster_df$B, 
+          bty = "g", pch = 18, 
+          col.var = as.integer(cluster_df$cluster), 
+          col = c("#1B9E77", "#D95F02"),
+          pch = 18, ticktype = "detailed",
+          #colkey = list(at = c(2, 3, 4), side = 1, 
+          addlines = TRUE, length = 0.5, width = 0.5,
+          labels = c("Cluster1", "Cluster2")) 
+filter(cluster_df, cluster==1)  
+filter(cluster_df, cluster==2) 
+pairs(cases_country_curves[,1:3], lower.panel = NULL, col = gmm$cluster)
+pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
+summary(factor(km$cluster))
+summary(factor(gmm$cluster))
+```
 
 
 ```{r}
