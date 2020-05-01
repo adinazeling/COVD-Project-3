@@ -69,7 +69,6 @@ plot(model, log="", main = "Logistic function")
 ```
 
 
-<<<<<<< HEAD
 Newton Raphson
 
 ```{r,eval=F}
@@ -147,8 +146,7 @@ path[dim(path)[1],]
 ```
 
 
-=======
->>>>>>> e2d7d00615101bff851fe44db00b010e3c594b24
+
 Create time from first case/fatality variables for entire dataset by Country/Region:
 
 ```{r data_cleaning}
@@ -220,12 +218,11 @@ kmeans_cluster <- function(X, k){
   delta <- 1
   iter <- 0 
   itermax <- 30
+  
+  centroid <- X[sample(n, k),] #Initiate, randomly pick three observations, use values as centroid
+  centroid_mem <- centroid
+  
   while(delta > 1e-4 && iter <= itermax){
-    if(iter == 0){
-      centroid <- X[sample(n, k),] #Initiate, randomly pick three observations, use values as centroid
-      centroid_mem <- centroid
-    }
-    
     d <- sapply(1:k, function(c) sapply(1:n, 
       function(i) sum((centroid[c,] - X[i,])^2))) #sum of p Euclidian distances from k centroids per obs 
     
