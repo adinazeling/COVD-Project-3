@@ -12,23 +12,15 @@ library(tidyverse)
 require(drc)
 ```
 
-## Introduction
+### Introduction
 
-COVID-19 is currently the world's largest public health crisis. One of the many challenges presented by the pandemic has been the ability to understand and predict the trajectory of disease. Being able to estimate values such as expected total cases and fatalities, greatly affects a nation's decision's to combat the disease and prepare their healthcare systems. Furthermore, the effect of the virus is varied in different countries and regions, thus requiring different predictions to assist in making more local decisions.
+COVID-19 is currently the world's largest public health crisis. One of the many challenges presented by the pandemic has been the ability to understand and predict the trajectory of disease. Being able to estimate values such as expected total cases and fatalities, greatly affects a nation's decision to combat the disease and prepare their healthcare systems. Furthermore, the effect of the virus is varied in different countries and regions, thus requiring different predictions to assist in making more local decisions.
 
-The logistic growth curve has been traditionally applied to model epidemics and disease data. In the early days of disease, the growth is exponential but then slows as the population is exposed and begins to develop immunity. This curve is characterized by three parameters:  the upper bounder (maximum number of cases), growth rate, and the mid-point (when the spread of disease begins to slow). We propose using the Newton Raphson algorithm on a logistic growth curve model to predict these parameters for different countries.
+The logistic growth curve has been traditionally applied to model epidemics and disease data. In the early days of disease, the growth is exponential but then slows as the population is exposed and begins to develop immunity. This curve is characterized by three parameters:  the upper bounder (maximum number of cases), growth rate, and the mid-point (when the spread of disease begins to slow). We propose using the Newton Raphson algorithm on a logistic growth curve model to predict these parameters for different countries. Furthermore, we use these predicted parameters to group countries to further understand the factors playing a role in the growth curve of the disease and advise on countries with similar trajectories. 
 
+### Methods
 
-### K-means Clustering
-
-It is of interest to public health experts to see which countries are having similar trends in the COVID-19 outbreak in order to help further understand how the disease is spread. We use the K-mean clustering algorithm to cluster the countries into groups based on the three parameters (a, b and c) estimated above. This algorithm required one to pre-specify the number of clusters one wishes to group the observations into. It then aims to minimize the within cluster correlation.
- 
-To begin this minimization process, K observations are randomly chosen and their observed predictors values are used to initiate the centroid for each cluster. The K centroids will be p dimensional, where p is the dimension of the variables given to the algorithm to create the clusters. In our case p = 3 ($\hat{a}$, $\hat{b}$, and $\hat{c}$). Each observation is then assigned to the cluster for which it has the smallest distance to the centroid. We chose to use Euclidian distance, such that the distance to the centroid of each cluster per observation is measured as $\sum_{j=1}^p(x_{ij}-\bar{x}_{j})^2$ for observation i (i = 1,...,n). The centroid for the $k^{th}$ cluster is then recomputed as the p averages of the observations in each cluster. These steps are repeated until the clusters stop changing. 
-
-
-## Methods
-
-### Predicting disease trajectory
+##### Predicting disease trajectory
 
 For the three-parameter logistic growth function, we can use least squares method to estimate the parameters a, b, and c. We define the objective function as the residual sum of squares and we can utilize Newton Raphson to find the optimal values that minimize this function. 
 
@@ -68,9 +60,17 @@ $$
 
 In addition, we incorporate step halving to ensure that the algorithm moves a specific distance along the ascent direction so that the objective function increases. At the $i^{th}$ step, if $f(\theta_i) > f(\theta_{i+1})$, then we proceed to step $i + 1$. Othersiwe, we search for a value $\lambda \in (1, 1)$ until $f(\theta_i(\lambda)) > f(\theta_i)$ then proceed to step $i + 1$
 
-### Clustering for Risk Factors
+##### Clustering for Risk Factors
 
-The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters.Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
+**K-means Clustering**
+
+It is of interest to public health experts to see which countries are having similar trends in the COVID-19 outbreak in order to help further understand how the disease is spread. We use the K-mean clustering algorithm to cluster the countries into groups based on the three parameters (a, b and c) estimated. This algorithm requires one to pre-specify the number of clusters one wishes to group the observations into. It then aims to minimize the within cluster correlation.
+ 
+To begin this minimization process, K observations are randomly chosen and their observed predictors values are used to initiate the centroid for each cluster. The K centroids will be p dimensional, where p is the dimension of the variables given to the algorithm to create the clusters. In our case p = 3 ($\hat{a}$, $\hat{b}$, and $\hat{c}$). Each observation is then assigned to the cluster for which it has the smallest distance to the centroid. We chose to use Euclidian distance, such that the distance to the centroid of each cluster per observation is measured as $\sum_{j=1}^p(x_{ij}-\bar{x}_{j})^2$ for observation i (i = 1,...,n). The centroid for the $k^{th}$ cluster is then recomputed as the p averages of the observations in each cluster. These steps are repeated until the clusters stop changing. 
+
+**Gaussian Mixture Model**
+
+A second method, the Gaussian Mixture Model (GMM), was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters. Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
 
 In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. The expectation can be represented as follows:
 $$E[Z_i=1|x_i, \theta^{(t)}]=P(Z_i=1|x_i, \theta^{(t)}) = \frac{p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}{(1-p^{(t)})f(x_i, \mu^{(t)}_1, \sum^{(t)}_1)+p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}$$
@@ -86,9 +86,9 @@ $$$$
 These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. 
 
 
-## Results
+### Results
 
-### Clustering
+##### Clustering
 
 We have estimated logistic growth curves for 109 countries. We explored different clustering values using K-means clustering and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
 
@@ -96,4 +96,4 @@ Since the K-means algorithm for k=3 produced only one point in cluster 1, we ran
 
 
 
-## Discusions
+### Discusions
