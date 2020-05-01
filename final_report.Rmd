@@ -50,13 +50,13 @@ $$\nabla^2 f(\theta) = \sum_{i = 1}^n \nabla \mu_i(t_i, \theta) [\mu_i(t_i, \the
 Using the gradient and hessian above, Newton Raphson updates the parameters using 
 
 $$
-\boldsymbol{\theta}_{1}=\boldsymbol{\theta}_{0}-\left[\nabla^{2} l\left(\boldsymbol{\theta}_{0}\right)\right]^{-1} \nabla l\left(\boldsymbol{\theta}_{0}\right)
+\boldsymbol{\theta}_{1}=\boldsymbol{\theta}_{0}-\left[\nabla^{2} f\left(\boldsymbol{\theta}_{0}\right)\right]^{-1} \nabla f\left(\boldsymbol{\theta}_{0}\right)
 $$
 
-However due to the complexicity of the Hessian matrix, we choose to use the identity matrix as a replacement. Although it requires more iterations in order to converge, the identity matrix simplifies the algorithm because it does not have to calculate the inverse of the hessian matrix. Since the identity matrix is positive definite, now, the algorithm updates by
+However due to the complexicity of the Hessian matrix, we choose to use the identity matrix as a replacement. Although it requires more iterations in order to converge, the identity matrix simplifies the algorithm because it does not have to calculate the inverse of the hessian matrix. Since the identity matrix is positive definite, Newton's direction $d = - [\nabla^2 f(\theta_0)]^{-1}\nabla f(\theta_0) = - [-I]\nabla f(\theta_0)$ will always be in an ascent direction. Now, we update the parameters using
 
 $$
-\boldsymbol{\beta}_{1}=\boldsymbol{\beta}_{0}+I_{3 \times 3} \nabla l\left(\boldsymbol{\beta}_{0}\right)
+ \boldsymbol{\beta}_{1}=\boldsymbol{\beta}_{0}+I_{3 \times 3} \nabla f\left(\boldsymbol{\beta}_{0}\right)
 $$
 
 
