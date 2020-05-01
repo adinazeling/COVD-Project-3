@@ -68,8 +68,6 @@ plot(model, log="", main = "Logistic function")
 
 ```
 
-<<<<<<< HEAD
-
 Newton Raphson
 
 ```{r,eval=F}
@@ -148,8 +146,6 @@ path[dim(path)[1],]
 
 
 
-=======
->>>>>>> d8957a4384738f8ad02e2d5c8e8d50dc523bc8b9
 Create time from first case/fatality variables for entire dataset by Country/Region:
 
 ```{r data_cleaning}
@@ -226,18 +222,27 @@ kmeans_cluster <- function(X, k){
   centroid_mem <- centroid
   
   while(delta > 1e-4 && iter <= itermax){
-    d <- sapply(1:k, function(c) sapply(1:n, 
-      function(i) sum((centroid[c,] - X[i,])^2))) #sum of p Euclidian distances from k centroids per obs 
+    distance <- NULL
+    for (i in 1:k) { #sum of p Euclidian distances from k centroids per obs
+      dist <- (map2_df(X, centroid[i,], `-`))^2 %>%
+        mutate(dist = A + B + C) %>%
+        dplyr::select(dist)
+      distance <- bind_cols(distance, dist)
+    }
     
-    cluster <- apply(d, 1, which.min) #Place obs. in cluster with smallest distance
-    
-    centroid <- t(sapply(1:k, function(c) 
-      apply(X[cluster == c,], 2, mean))) # Compute new k*p centroids
-    
+    cluster <- apply(distance, 1, which.min) #Place obs. in cluster with smallest distance
+  
+    centroid <- NULL
+    for (i in 1:k) { # Compute new k*p centroids
+      mean <- X[cluster == i,] %>% summarise(B = mean(B), A = mean(A), C = mean(C))
+      centroid = rbind(centroid, mean)
+    }
+
     delta <- sum((centroid - centroid_mem)^2) #Check converegence
     iter <- iter + 1 
     centroid_mem <- centroid
   }
+  
   X = cbind(X, cluster = cluster)
   return(list(centroid = centroid, cluster = cluster, df = X))
 }
@@ -247,6 +252,13 @@ km <- kmeans_cluster(cases_country_curves[,1:3], 2)
 pairs(cases_country_curves[,1:3], lower.panel = NULL, col = km$cluster)
 summary(factor(km$cluster))
 
+km_vec <- cbind(cases_country_curves, cluster = km$cluster)
+covid19_select <- covid19 %>% 
+  rename(Country = 'Country/Region') %>%
+  dplyr::select(c(Country, Lat, Long))
+  
+test <- inner_join(km_vec, covid19_select) %>% distinct()
+
 #Compare to package
 km_pkg <- kmeans(cases_country_curves[,1:3], 2)
 summary(factor(km_pkg$cluster))
@@ -254,8 +266,9 @@ km_pkg_vec <- cbind(cases_country_curves, cluster = km_pkg$cluster)
 
 ```
 
+#### Guassian Mixture Model:
 
-The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters.Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
+The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters. Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
 
 In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. The expectation can be represented as follows:
 $$E[Z_i=1|x_i, \theta^{(t)}]=P(Z_i=1|x_i, \theta^{(t)}) = \frac{p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}{(1-p^{(t)})f(x_i, \mu^{(t)}_1, \sum^{(t)}_1)+p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}$$
@@ -335,6 +348,6 @@ gmm_clustering = function(X, k){
 }
 
 # run for two clusters
-gmm = gmm.fromscratch(cases_country_curves[,1:3], 2)
+gmm = gmm_clustering(cases_country_curves[,1:3], 2)
 ```
 
