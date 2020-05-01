@@ -12,3 +12,15 @@ library(tidyverse)
 require(drc)
 ```
 
+## Introduction
+
+## Methods
+
+### Predicting disease trajectory
+
+### Clustering for Risk Factors
+
+## Results
+
+## Discusions
+
