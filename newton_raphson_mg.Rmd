@@ -273,20 +273,6 @@ new_covid = new_covid %>%
          time_from_first_death = cumsum(time_from_first_death)) %>%
   filter(max(time_from_first_case) >= 14)
 
-covid19_country <- covid19 %>%
-  group_by(`Country/Region`, Date) %>%
-  summarise(ConfirmedCases = sum(ConfirmedCases),
-            Fatalities = sum(Fatalities)) %>% 
-  filter(ConfirmedCases != 0) %>%
-  mutate(Date = as.Date(Date, format="%m/%d/%Y")) %>%
-  arrange(`Country/Region`, Date) %>%
-  mutate(
-    time_from_first_case = ifelse(ConfirmedCases >= 1, 1, 0),
-         time_from_first_case = cumsum(time_from_first_case),
-         time_from_first_death = ifelse(Fatalities >= 1, 1, 0),
-         time_from_first_death = cumsum(time_from_first_death)) %>%
-  filter(max(time_from_first_case) >= 14)
-
 
 ```
 

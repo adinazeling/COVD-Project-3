@@ -21,7 +21,7 @@ day3_11 = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/ma
 check = rbind(day3_10, day3_11)
 
 final = NULL
-for (i in 10:20) {
+for (i in 10:21) {
   
   main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-"
   end = "-2020.csv"
@@ -30,5 +30,9 @@ for (i in 10:20) {
   
   final = rbind(final, data)
 }
+
+upto3_21 = final%>%separate(Last.Update, c("date", NA), sep = "T")
+
+
 ```
 
