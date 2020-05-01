@@ -279,6 +279,7 @@ new_covid = new_covid %>%
 # Select plots of a few countries
 # Italy
 italy_par = par_new %>% filter(Country == "Italy") %>% dplyr::select(Country, new_par) %>% unlist() %>% t() %>% tibble()
+
 data = tibble(x = seq(0, 100, 1),
               y = (113003.151270932 / (1 + exp(-0.199257485129498* (x - 51.6570865338225)))))
 
