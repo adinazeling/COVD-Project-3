@@ -326,3 +326,13 @@ for (i in 1:109) {
 }
 ```
 
+```{r}
+plot1 = plot1 %>% 
+  ggplot(aes(x = x, y = y, color = country)) + 
+  geom_point() +
+  labs(title = "Estimated Logistic Growth Curves for Countries with 50000+ Confirmed Cases",
+       x = "Time from first case",
+       y = "Confirmed Cases") + 
+  theme_bw()
+```
+
