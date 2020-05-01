@@ -12,6 +12,7 @@ library(tidyverse)
 require(drc)
 ```
 
+<<<<<<< HEAD
 ### K-means Clustering
 
 It is of interest to public health experts to see which countries are having similar trends in the COVID-19 outbreak in order to help further understand how the disease is spread. We use the K-mean clustering algorithm to cluster the countries into groups based on the three parameters (a, b and c) estimated above. This algorithm required one to pre-specify the number of clusters one wishes to group the observations into. It then aims to minimize the within cluster correlation.
@@ -20,4 +21,30 @@ To begin this minimization process, K observations are randomly chosen and their
 
 We have estimated logistic growth curves for 109 countries. We explored different clustering values and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.
 
+=======
+## Introduction
+
+## Methods
+
+### Predicting disease trajectory
+
+### Clustering for Risk Factors
+
+The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters.Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean $\mu$ and covariance matrix $\sum$. 
+
+In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. The expectation can be represented as follows:
+$$E[Z_i=1|x_i, \theta^{(t)}]=P(Z_i=1|x_i, \theta^{(t)}) = \frac{p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}{(1-p^{(t)})f(x_i, \mu^{(t)}_1, \sum^{(t)}_1)+p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}$$
+with $Z_i$ indicating the cluster. So if $Z_i=1$ then $X_i$ would be from the $MVN(\mu_2, \sum_2)$ distribution. For the initiation, the results of the K-means clustering was used as the starting values for the weights, means, and covariance matrices.
+
+
+The second step is the Maximizing step wherein the likelihood function is maximized to update the parameters. More specificaly, the cluster probabilities (i.e. the weight signifiying how much each cluster represents the data points), cluster means, and cluster covariance matrices will be updated. The equations for the parameters are as follows:
+
+
+These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. 
+
+
+## Results
+
+## Discusions
+>>>>>>> 3f8a9f45543f882675fcf9b1116f8b80c8a5abbc
 
