@@ -208,3 +208,55 @@ nls(y ~ SSlogis(x, Asym, xmid, scal), df)
 
 ```
 
+```{r}
+predict = function(data, A, B, C, ...) {
+  par = c(A, B, C)
+  par_new = NewtonRaphson(y = data$ConfirmedCases, t = data$time_from_first_case, func, par)
+  return(par)
+}
+```
+
+
+## Apply Newton Raphson to all countries, with starts pre-specified
+
+```{r}
+#Find estimates per country of cases - premade R function
+cases_country_curves = covid19_country %>%
+  split(.$`Country/Region`) %>%
+  map(~coefficients(drm(ConfirmedCases ~ time_from_first_case, fct = L.3(), data = .)))
+
+cases_country_curves <- data.frame(matrix(unlist(cases_country_curves), nrow=length(cases_country_curves), byrow = T))
+
+cases_country_curves <- cbind(cases_country_curves, Country = levels(factor(covid19_country$`Country/Region`))) %>%
+  rename(B = "X1", A = "X2", C = "X3")
+
+# Prepare data for Newton Raphson with pre-specified starts
+covid19_country = covid19_country %>% 
+  group_by(`Country/Region`) %>% 
+  nest() %>% rename("Country" = `Country/Region`)
+
+covid19_country = full_join(covid19_country, cases_country_curves, by = "Country") %>% 
+  mutate(B = -B) 
+
+# Apply Newton Raphson to all countries
+par_new = covid19_country %>% 
+  pmap(predict) %>% 
+  tibble() %>% 
+  rename(new_par = ".") 
+# Join with Country names
+par_new = bind_cols(covid19_country, par_new)
+```
+
+```{r}
+# Select plots of a few countries
+# Italy
+italy_par = par_new %>% filter(Country == "Italy") %>% dplyr::select(Country, new_par) %>% unlist() %>% t() %>% tibble()
+data = tibble(x = seq(0, 100, 1),
+              y = (113003.151270932 / (1 + exp(-0.199257485129498* (x - 51.6570865338225)))))
+
+data %>% 
+  ggplot(aes(x = x, y = y)) + 
+  geom_point() + 
+  theme_bw()
+```
+
