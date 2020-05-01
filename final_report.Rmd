@@ -12,3 +12,32 @@ library(tidyverse)
 require(drc)
 ```
 
+# Methods
+
+For the three-parameter logistic growth function, we can use least squares method to estimate the parameters a, b, and c. We define the objective function as the residual sum of squares and we can utilize Newton Raphson to find the optimal values that minimize this function. 
+
+The objective function is 
+$$f(\theta) = \cfrac{1}{2}\sum_{i = 1}^n \big[y_i - \mu_i(t_i, \theta)\big]^2,\ where \ \mu_i(t_i, \theta) = \cfrac{a}{1 + e^{-b(t -c)}}$$
+The gradient can be defined as
+
+$$\nabla f(\theta) = \sum_{i = 1}^n \big[y_i - \mu_i(t_i, \theta)\big] \nabla \mu_i (t_i, \theta) =
+\left(\begin{array}{c} -\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{1}{1 + e^{-b(t_i -c)}} \\
+\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{a(c-t_i)e^{-b(t_i - c)}}{(1 + e^{-b(t_i -c)})^2} \\
+\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{abe^{-b(t_i - c)}}{(1 + e^{-b(t_i -c)})^2} \end{array}\right) $$
+
+
+The hessian can be expressed as 
+
+$$\nabla^2 f(\theta) = \sum_{i = 1}^n \nabla \mu_i(t_i, \theta) [\mu_i(t_i, \theta)]^T - \sum_{i = 1}^n [y_i - \mu_i(t_i, \theta)][\nabla^2\mu(t_i, \theta)]^T$$
+
+Using the gradient and hessian above, Newton Raphson updates the parameters using 
+
+$$
+\boldsymbol{\theta}_{1}=\boldsymbol{\theta}_{0}-\left[\nabla^{2} l\left(\boldsymbol{\theta}_{0}\right)\right]^{-1} \nabla l\left(\boldsymbol{\theta}_{0}\right)
+$$
+
+However due to the complexicity of the Hessian matrix, we choose to use the identity matrix as a replacement. Although it requires more iterations in order to converge, using the identity matrix simplifies the algorithm since it does not have to calculate the inverse of the hessian matrix. Since the identity matrix is positive definite, now, the algorithm updates by
+
+$$
+\boldsymbol{\beta}_{1}=\boldsymbol{\beta}_{0}+I_{3 \times 3} \nabla l\left(\boldsymbol{\beta}_{0}\right)
+$$
