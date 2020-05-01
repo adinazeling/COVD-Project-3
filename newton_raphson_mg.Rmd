@@ -248,6 +248,26 @@ par_new = bind_cols(covid19_country, par_new)
 ```
 
 ```{r}
+# Load newest version of data
+new_covid = read.delim("./covid19-04-30-2020.txt", header = T, sep = ",") %>% 
+  as.data.frame()
+
+new_covid = new_covid %>% 
+  group_by(`Country_Region`, Last_Update) %>%
+  summarise(Confirmed = sum(Confirmed),
+            Deaths = sum(Deaths)) %>% 
+  filter(Confirmed != 0) %>%
+  mutate(Date = as.Date(Last_Update, format="%m/%d/%Y")) %>%
+  arrange(`Country_Region`, Last_Update) %>%
+  mutate(time_from_first_case = ifelse(Confirmed >= 1, 1, 0),
+         time_from_first_case = cumsum(time_from_first_case),
+         time_from_first_death = ifelse(Deaths>= 1, 1, 0),
+         time_from_first_death = cumsum(time_from_first_death)) %>%
+  filter(max(time_from_first_case) >= 14)
+```
+
+
+```{r}
 # Select plots of a few countries
 # Italy
 italy_par = par_new %>% filter(Country == "Italy") %>% dplyr::select(Country, new_par) %>% unlist() %>% t() %>% tibble()
