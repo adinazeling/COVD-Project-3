@@ -14,24 +14,384 @@ knitr::opts_chunk$set(echo = TRUE)
 
 library(httr)
 
-day3_10 = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-10-2020.csv", header=T)
-
-day3_11 = read.csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-11-2020.csv", header = T)
-
-check = rbind(day3_10, day3_11)
-
 final = NULL
-for (i in 10:21) {
+for (i in 25:31) {
   
   main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-"
   end = "-2020.csv"
 
-  data = read.csv(paste0(main, i, end))
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
   
   final = rbind(final, data)
 }
 
-upto3_21 = final%>%separate(Last.Update, c("date", NA), sep = "T")
+
+april_final1 = NULL
+for (i in 1:9) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/04-0"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
+  
+  april_final1 = rbind(april_final1, data)
+}
+  
+april_final2 = NULL
+for (i in 10:22) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/04-"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
+  
+  april_final2 = rbind(april_final2, data)
+}
+
+```
+
+Combine the datasets
+
+```{r}
+
+m25_m31 = final%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+a1_a9 = april_final1%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+
+a10_a22 = april_final2%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+current_data = rbind(m25_m31, a1_a9, a10_a22)%>%
+  mutate(date = as.Date(date))
+
+
+j22_m24 = covid19%>%
+  janitor::clean_names()%>%
+  dplyr::select(c(country_region, date, confirmed_cases, fatalities))%>%
+  mutate(date = as.Date(date, format="%m/%d/%Y"))%>%
+  mutate(date = as.character(date))%>%
+  mutate(date = str_replace(date, "00", "20"))%>%
+  mutate(date = as.Date(date))%>%
+  group_by(country_region, date) %>%
+  summarise(confirmed_cases = sum(confirmed_cases),
+            fatalities = sum(fatalities)) 
+
+complete_data = full_join(j22_m24, current_data)%>%
+  arrange(date)%>%
+  mutate(
+    time_from_first_case = ifelse(confirmed_cases >= 1, 1, 0),
+         time_from_first_case = cumsum(time_from_first_case),
+         time_from_first_death = ifelse(fatalities >= 1, 1, 0),
+         time_from_first_death = cumsum(time_from_first_death)) %>%
+  filter(max(time_from_first_case) >= 14)
+
+
+```
+
+Compare the predicted curves with actual data
+
+US
+
+```{r}
+
+US_complete_data = complete_data%>%
+  filter(country_region == "US")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 59, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+US_predict_case = predict_case%>%
+  filter(country == "US")
+  
+plot(US_complete_data$time_from_first_case, US_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for US", xlab = "Time since first case", ylab = "Estimated Confirmed Cases")
+lines(US_predict_case$x, US_predict_case$y, col = "red")
+legend(2, 600000, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
+
+
+```
+
+
+Italy
+
+```{r}
+
+It_complete_data = complete_data%>%
+  filter(country_region == "Italy")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 83, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+Italy_predict_case = predict_case%>%
+  filter(country == "Italy")
+  
+plot(It_complete_data$time_from_first_case, It_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for Italy", xlab = "Time since first case", ylab = "Estimated Confirmed Cases")
+lines(Italy_predict_case$x, Italy_predict_case$y, col = "red")
+legend(2, 150000, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
+
+
+```
+
+Israel
+
+```{r}
+
+Is_complete_data = complete_data%>%
+  filter(country_region == "Israel")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 62, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+Is_predict_case = predict_case%>%
+  filter(country == "Israel")
+  
+plot(Is_complete_data$time_from_first_case, Is_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for Israel", xlab = "Time since first case", ylab = "Estimated Confirmed Cases", ylim = c(0, 60000))
+lines(Is_predict_case$x, Is_predict_case$y, col = "red")
+legend(2, 50000, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
+
+
+```
+
+China (data is not trustworthy)
+
+```{r}
+
+china_complete_data = complete_data%>%
+  filter(country_region == "China")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 83, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+Italy_predict_case = predict_case%>%
+  filter(country == "China")
+  
+plot(It_complete_data$time_from_first_case, It_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for China", xlab = "Time since first case", ylab = "Estimated Confirmed Cases")
+lines(Italy_predict_case$x, Italy_predict_case$y, col = "red")
+legend(2, 150000, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
+
+
+```
+
+Togo
+
+```{r}
+
+togo_complete_data = complete_data%>%
+  filter(country_region == "Togo")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 48, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+# Generate plot data for all countries
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+togo_predict_case = predict_case%>%
+  filter(country == "Togo")
+  
+plot(togo_complete_data$time_from_first_case, togo_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for Togo", xlab = "Time since first case", ylab = "Estimated Confirmed Cases")
+lines(togo_predict_case$x, togo_predict_case$y, col = "red")
+legend(2, 60, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
+
+
+```
+
+Nepal
+
+```{r}
+
+nepal_complete_data = complete_data%>%
+  filter(country_region == "Nepal")
+
+#predicted curve
+gen_cases = function(country, a, b, c) {
+  data = tibble(country = country,
+                x = seq(0, 89, 1),
+                y = (a / (1 + exp(-b * (x - c)))))
+  return(data)
+}
+
+predict_case = tibble(country = as.character(), x = as.numeric(), y = as.numeric())
+for (i in 1:109) {
+  a = as.numeric(par_new[i,6])
+  b = as.numeric(par_new[i,7])
+  c = as.numeric(par_new[i,8])
+  country = as.character(par_new[i,1])
+  data = gen_cases(country, a, b, c)
+  predict_case = bind_rows(predict_case, data)
+}
+
+nepal_predict_case = predict_case%>%
+  filter(country == "Nepal")
+  
+plot(nepal_complete_data$time_from_first_case, nepal_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for Nepal", xlab = "Time since first case", ylab = "Estimated Confirmed Cases", ylim = c(0, 5))
+lines(nepal_predict_case$x, nepal_predict_case$y, col = "red")
+legend(2, 30, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
 
 
 ```
