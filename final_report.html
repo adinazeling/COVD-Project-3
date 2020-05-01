@@ -375,6 +375,48 @@ summary {
 <p>To begin this minimization process, K observations are randomly chosen and their observed predictors values are used to initiate the centroid for each cluster. The K centroids will be p dimensional, where p is the dimension of the variables given to the algorithm to create the clusters. In our case p = 3 (<span class="math inline">\(\hat{a}\)</span>, <span class="math inline">\(\hat{b}\)</span>, and <span class="math inline">\(\hat{c}\)</span>). Each observation is then assigned to the cluster for which it has the smallest distance to the centroid. We chose to use Euclidian distance, such that the distance to the centroid of each cluster per observation is measured as <span class="math inline">\(\sum_{j=1}^p(x_{ij}-\bar{x}_{j})^2\)</span> for observation i (i = 1,…,n). The centroid for the <span class="math inline">\(k^{th}\)</span> cluster is then recomputed as the p averages of the observations in each cluster. These steps are repeated until the clusters stop changing.</p>
 <p>We have estimated logistic growth curves for 109 countries. We explored different clustering values and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2. For k = 3, the observations were divided into 1, 12, and 96 observations per cluster. For k = 3, the observations were divided into 1, 9, 10, and 98 observations per cluster.</p>
 </div>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+</div>
+<div id="methods" class="section level2">
+<h2>Methods</h2>
+</div>
+<div id="methods-1" class="section level1">
+<h1>Methods</h1>
+<div id="predicting-disease-trajectory" class="section level3">
+<h3>Predicting disease trajectory</h3>
+<p>For the three-parameter logistic growth function, we can use least squares method to estimate the parameters a, b, and c. We define the objective function as the residual sum of squares and we can utilize Newton Raphson to find the optimal values that minimize this function.</p>
+<p>The objective function is <span class="math display">\[f(\theta) = \cfrac{1}{2}\sum_{i = 1}^n \big[y_i - \mu_i(t_i, \theta)\big]^2,\ where \ \mu_i(t_i, \theta) = \cfrac{a}{1 + e^{-b(t -c)}}\]</span></p>
+<p>The gradient can be defined as</p>
+<p><span class="math display">\[\nabla f(\theta) = \sum_{i = 1}^n \big[y_i - \mu_i(t_i, \theta)\big] \nabla \mu_i (t_i, \theta) =
+\left(\begin{array}{c} -\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{1}{1 + e^{-b(t_i -c)}} \\
+\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{a(c-t_i)e^{-b(t_i - c)}}{(1 + e^{-b(t_i -c)})^2} \\
+\sum_{i=1}^{n} \bigg(y_{i}-\cfrac{a}{1 + e^{-b(t_i -c)}}\bigg) \cfrac{abe^{-b(t_i - c)}}{(1 + e^{-b(t_i -c)})^2} \end{array}\right) \]</span></p>
+<p>The hessian can be expressed as</p>
+<p><span class="math display">\[\nabla^2 f(\theta) = \sum_{i = 1}^n \nabla \mu_i(t_i, \theta) [\mu_i(t_i, \theta)]^T - \sum_{i = 1}^n [y_i - \mu_i(t_i, \theta)][\nabla^2\mu(t_i, \theta)]^T\]</span></p>
+<p>Using the gradient and hessian above, Newton Raphson updates the parameters using</p>
+<p><span class="math display">\[
+\boldsymbol{\theta}_{1}=\boldsymbol{\theta}_{0}-\left[\nabla^{2} l\left(\boldsymbol{\theta}_{0}\right)\right]^{-1} \nabla l\left(\boldsymbol{\theta}_{0}\right)
+\]</span></p>
+<p>However due to the complexicity of the Hessian matrix, we choose to use the identity matrix as a replacement. Although it requires more iterations in order to converge, using the identity matrix simplifies the algorithm since it does not have to calculate the inverse of the hessian matrix. Since the identity matrix is positive definite, now, the algorithm updates by</p>
+<p><span class="math display">\[
+\boldsymbol{\beta}_{1}=\boldsymbol{\beta}_{0}+I_{3 \times 3} \nabla l\left(\boldsymbol{\beta}_{0}\right)
+\]</span></p>
+</div>
+<div id="clustering-for-risk-factors" class="section level3">
+<h3>Clustering for Risk Factors</h3>
+<p>The Gaussian Mixture Model (GMM) was applied using EM algorithm to cluster the fitted parameters. The EM algorithm allows for maximizing the likelihood function when some of the variables are unobserved. In this case unobserved variable would refer to the clusters.Since this is a GMM, the parameters are assumed to follow a multivariate normal distribution with mean <span class="math inline">\(\mu\)</span> and covariance matrix <span class="math inline">\(\sum\)</span>.</p>
+<p>In the algorithm, the first step is the Expectation step in which the probability of being in a cluter given the current data is calculated. The expectation can be represented as follows: <span class="math display">\[E[Z_i=1|x_i, \theta^{(t)}]=P(Z_i=1|x_i, \theta^{(t)}) = \frac{p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}{(1-p^{(t)})f(x_i, \mu^{(t)}_1, \sum^{(t)}_1)+p^{(t)}f(x_i, \mu^{(t)}_2, \sum^{(t)}_2)}\]</span> with <span class="math inline">\(Z_i\)</span> indicating the cluster. So if <span class="math inline">\(Z_i=1\)</span> then <span class="math inline">\(X_i\)</span> would be from the <span class="math inline">\(MVN(\mu_2, \sum_2)\)</span> distribution. For the initiation, the results of the K-means clustering was used as the starting values for the weights, means, and covariance matrices.</p>
+<p>The second step is the Maximizing step wherein the likelihood function is maximized to update the parameters. More specificaly, the cluster probabilities (i.e. the weight signifiying how much each cluster represents the data points), cluster means, and cluster covariance matrices will be updated. The equations for the parameters are as follows:</p>
+<p>These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached.</p>
+</div>
+<div id="results" class="section level2">
+<h2>Results</h2>
+</div>
+<div id="discusions" class="section level2">
+<h2>Discusions</h2>
+</div>
+</div>
 
 
 
