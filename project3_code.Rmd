@@ -382,9 +382,12 @@ gmm_clustering = function(X, k){
 }
 
 # run for two clusters
-gmm = gmm_clustering(par_new[ ,6:8], 4)
+gmm = gmm_clustering(par_new[ ,6:8], 2)
 gmm$cluster
 km$cluster
+explore = cbind(cases_country_curves, cluster = gmm$cluster)[,5:6]
+filter(explore, cluster==1)
+filter(explore, cluster==2)
 ```
 
 
