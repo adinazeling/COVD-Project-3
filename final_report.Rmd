@@ -194,7 +194,7 @@ Read in data:
 covid19 <- read_csv("covid19-1.csv")
 ```
 
-Explore data - NY Example:
+Explore data
 
 ```{r explore, eval = F}
 NY_dat = covid19 %>% filter(`Province/State` == "New York")
@@ -224,13 +224,9 @@ for (i in (deaths+1):dim(NY_dat)[1]) {
   j = j+1
 }
 
-#Check whether logistic curve is good aproximation - fatalities
-plot(Fatalities ~ time_from_first_death, data = NY_dat) 
-
-#Appears to have exponential growth, will try logistic growth model however
 ```
 
-First use US data:
+Clean COVID
 
 ```{r explore2, eval = FALSE}
 covid19 <- read_csv("covid19-1.csv")
@@ -394,29 +390,6 @@ test4
 
 
 ```{r, eval = FALSE}
-
-Chick.1 <- ChickWeight[ChickWeight$Chick == 1, ]
-SSlogis(Chick.1$Time, 368, 14, 6)  # response only
-local({
-  Asym <- 368; xmid <- 14; scal <- 6
-  SSlogis(Chick.1$Time, Asym, xmid, scal) # response _and_ gradient
-})
-getInitial(weight ~ SSlogis(Time, Asym, xmid, scal), data = Chick.1)
-## Initial values are in fact the converged one here, "Number of iter...: 0" :
-fm1 <- nls(weight ~ SSlogis(Time, Asym, xmid, scal), data = Chick.1)
-summary(fm1)
-## but are slightly improved here:
-fm2 <- update(fm1, control=nls.control(tol = 1e-9, warnOnly=TRUE), trace = TRUE)
-all.equal(coef(fm1), coef(fm2)) # "Mean relative difference: 9.6e-6"
-str(fm2$convInfo) # 3 iterations
-# }
-# NOT RUN {
-
-# }
-```
-
-
-```{r, eval = FALSE}
 predict = function(data, A, B, C, ...) {
   par = c(A, B, C)
   par_new = NewtonRaphson(y = data$ConfirmedCases, t = data$time_from_first_case, func, par)
@@ -468,41 +441,181 @@ save(par_new, file = "par_new.RData")
 
 Compare to more recent data:
 
-```{r, eval = FALSE}
-# Load newest version of data
-new_covid = read.delim("./covid19-04-30-2020.txt", header = T, sep = ",") %>% 
-  as.data.frame()
+```{r}
 
-new_covid = new_covid %>% 
-  group_by(`Country_Region`, Last_Update) %>%
-  summarise(Confirmed = sum(Confirmed),
-            Deaths = sum(Deaths)) %>% 
-  filter(Confirmed != 0) %>%
-  mutate(Date = as.POSIXct(Last_Update)) %>%
-  arrange(`Country_Region`, Date) %>%
-  mutate(time_from_first_case = ifelse(Confirmed >= 1, 1, 0),
+library(httr)
+
+final = NULL
+for (i in 25:31) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
+  
+  final = rbind(final, data)
+}
+
+
+april_final1 = NULL
+for (i in 1:9) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/04-0"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
+  
+  april_final1 = rbind(april_final1, data)
+}
+  
+april_final2 = NULL
+for (i in 10:22) {
+  
+  main = "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/04-"
+  end = "-2020.csv"
+
+  data = read.csv(paste0(main, i, end))%>%
+    janitor::clean_names()%>%
+    dplyr::select(c(country_region, last_update, confirmed, deaths))
+  
+  if(is.na(mdy_hm(data$last_update[1]))){
+    
+    data = data%>%
+      mutate(formatting = ymd_hms(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }else{
+  
+    data = data%>%
+      mutate(formatting = mdy_hm(last_update),
+             day = mday(formatting),
+             month = month(formatting),
+             year = year(formatting),
+             date = make_date(year, month, day))
+  }
+  
+  
+  
+  april_final2 = rbind(april_final2, data)
+}
+
+```
+
+Combine the datasets
+
+```{r}
+
+m25_m31 = final%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+a1_a9 = april_final1%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+
+a10_a22 = april_final2%>%
+  mutate(date = as.Date(date))%>%
+  dplyr::select(c(country_region, date, confirmed, deaths))%>%
+  group_by(country_region, date)%>%
+  summarize(confirmed_cases = sum(confirmed),
+            fatalities = sum(deaths)) %>%
+  arrange(country_region, date)
+
+current_data = rbind(m25_m31, a1_a9, a10_a22)%>%
+  mutate(date = as.Date(date))
+
+
+j22_m24 = covid19%>%
+  janitor::clean_names()%>%
+  dplyr::select(c(country_region, date, confirmed_cases, fatalities))%>%
+  mutate(date = as.Date(date, format="%m/%d/%Y"))%>%
+  mutate(date = as.character(date))%>%
+  mutate(date = str_replace(date, "00", "20"))%>%
+  mutate(date = as.Date(date))%>%
+  group_by(country_region, date) %>%
+  summarise(confirmed_cases = sum(confirmed_cases),
+            fatalities = sum(fatalities)) 
+
+complete_data = full_join(j22_m24, current_data)%>%
+  arrange(date)%>%
+  mutate(
+    time_from_first_case = ifelse(confirmed_cases >= 1, 1, 0),
          time_from_first_case = cumsum(time_from_first_case),
-         time_from_first_death = ifelse(Deaths>= 1, 1, 0),
+         time_from_first_death = ifelse(fatalities >= 1, 1, 0),
          time_from_first_death = cumsum(time_from_first_death)) %>%
   filter(max(time_from_first_case) >= 14)
 
 
-# Select plots of a few countries
-# Italy
-italy_par = par_new %>% filter(Country == "Italy") %>% dplyr::select(Country, new_par) %>% unlist() %>% t() %>% tibble()
+```
 
-data = tibble(x = seq(0, 100, 1),
-              y = (113003.151270932 / (1 + exp(-0.199257485129498* (x - 51.6570865338225)))))
+Compare the predicted curves with actual data
 
-data %>% 
-  ggplot(aes(x = x, y = y)) + 
-  geom_point() + 
-  theme_bw()
+US
 
-# Function that generates data
+```{r}
+
+US_complete_data = complete_data%>%
+  filter(country_region == "US")
+
+#predicted curve
 gen_cases = function(country, a, b, c) {
   data = tibble(country = country,
-                x = seq(0, 100, 1),
+                x = seq(0, 59, 1),
                 y = (a / (1 + exp(-b * (x - c)))))
   return(data)
 }
@@ -518,15 +631,17 @@ for (i in 1:109) {
   predict_case = bind_rows(predict_case, data)
 }
 
+US_predict_case = predict_case%>%
+  filter(country == "US")
+  
+plot(US_complete_data$time_from_first_case, US_complete_data$confirmed_cases, col = "blue", main = "Evaluating the Accuracy of the Logistic Predictions for US", xlab = "Time since first case", ylab = "Estimated Confirmed Cases")
+lines(US_predict_case$x, US_predict_case$y, col = "red")
+legend(2, 600000, legend=c("Actual Data", "Logistic Curve"), lty = c(2, 1),
+       col=c("blue", "red"))
 
-plot1 = plot1 %>% 
-  ggplot(aes(x = x, y = y, color = country)) + 
-  geom_point() +
-  labs(title = "Estimated Logistic Growth Curves for Countries with 50000+ Confirmed Cases",
-       x = "Time from first case",
-       y = "Confirmed Cases") + 
-  theme_bw()
+
 ```
+
 
 k-means clustering:
 
