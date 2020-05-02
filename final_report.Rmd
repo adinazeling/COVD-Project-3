@@ -140,19 +140,19 @@ knitr::include_graphics('./us_predicted_cases.jpeg')
 *Figure 4.*
 
 ```{r fig4,  echo=FALSE, fig.align='center'}
-knitr::include_graphics('./israel_predicted_cases.jpeg')
+knitr::include_graphics('./israel_prediction_cases.jpeg')
 ```
 
 *Figure 5.*
 
 ```{r fig5,  echo=FALSE, fig.align='center'}
-knitr::include_graphics('./togo_predicted_cases.jpeg')
+knitr::include_graphics('./togo_prediction_cases.jpeg')
 ```
 
 *Figure 6.*
 
 ```{r fig6,  echo=FALSE, fig.align='center'}
-knitr::include_graphics('./nepal_predicted_cases.jpeg')
+knitr::include_graphics('./nepal_prediction_cases.jpeg')
 ```
 
 *Figure 7. k = 4 clusters scatter plots for three parameters*
