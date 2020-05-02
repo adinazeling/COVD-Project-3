@@ -395,6 +395,13 @@ library(mclust)
 ggm_pkg <- Mclust(par_new[ ,6:8], 4)
 plot(Mclust(par_new[ ,6:8], 4), what = "classification")
 
+plot_kclusters
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("orange", "yellow", "red", "dark red")[km$cluster],
+      bg = c("red", "green3"))
+
 pairs(par_new[ ,6:8], 
       labels = c("a", "b", "c"),
       lower.panel = NULL, 
@@ -423,6 +430,27 @@ mapCountryData(sPDF2, nameColumnToPlot = "prob4" , addLegend = FALSE,
 text(x=country_names$Long_avg, y=country_names$Lat_avg, labels = country_names$Country, cex = 0.7)
 
 
+summary(factor(ggm_pkg$classification))
+explore = cbind(cases_country_curves, cluster = ggm_pkg$classification)[,5:6]
+explore %>% 
+  filter(cluster==1)
+explore %>% 
+  filter(cluster==2)
+explore %>% 
+  filter(cluster==3)
+explore %>% 
+  filter(cluster==4)
+```
 
+```{r}
+ggm_pkg2 <- Mclust(par_new[ ,6:8], 3)
+plot(Mclust(par_new[ ,6:8], 4), what = "classification")
+
+pairs(par_new[ ,6:8], 
+      labels = c("a", "b", "c"),
+      lower.panel = NULL, 
+      col = c("orange", "yellow", "red", "dark red")[ggm_pkg2$classification],
+      bg = c("red", "green3"))
+summary(factor(ggm_pkg2$classification))
 ```
 
