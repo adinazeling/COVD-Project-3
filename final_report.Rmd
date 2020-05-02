@@ -109,11 +109,7 @@ We have estimated logistic growth curves for 109 countries. We explored differen
 
 
 
-Using the GMM EM algorithm for k=2 clusters, the results showed that 78 observations were placed in cluster 1 while the remaining 31 observations were in cluster 2. For k=3, clusters 1, 2, and 3 had 33, 58, and 18 observations, respectively. While for k=4, clusters 1, 2, 3, and 4 had 37, 16, 39, and 17 observations, respectively. 
-
-
-
-
+Using the GMM EM algorithm for k=2 clusters, the results showed that 78 observations were placed in cluster 1 while the remaining 31 observations were in cluster 2. For k=3, clusters 1, 2, and 3 had 59, 19, and 30 observations, respectively. While for k=4, clusters 1, 2, 3, and 4 had 60, 4, 12, and 32 observations, respectively. Similar clustering was observed to the K-means results. More specifically, the clustering seemed to be defined by the upper bound from very high, to high, to middle, and to low. Most of the countries were placed in the low upper bound cluster. Notable countries such as the US and China with high max number of cases a region can reach were found in the very high upper bound cluster.
 
 
 
