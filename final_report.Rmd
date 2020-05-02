@@ -90,7 +90,7 @@ $$\sigma_1^{2(t+1)}=\frac{\sum^n_{i=1}[(1-Z_i^{(t)})(X_i-\mu_1^{(t+1)})^2]}{\sum
 $$\sigma_2^{2(t+1)}=\frac{\sum^n_{i=1}[Z_i^{(t)}(X_i-\mu_2^{(t+1)})^2]}{\sum^n_{i=1}Z_i^{(t)}}$$
 
 
-These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. 
+These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. However, since the algorithm incorporates the results of the K-means function as starting values for the parameters, some issues arose in instances when there was only one observation for a cluster. This would lead to sigma matrices being zero. Therefore, when this occurred, we removed the sole country in the cluster and ran the algorithm again. 
 
 
 ### Results
@@ -106,7 +106,6 @@ We compared our prediction results, which were modelled on data prior to March 2
 #### Clustering
 
 We have estimated logistic growth curves for 109 countries. We explored different clustering values using K-means clustering and found that for k = 2, 98 observations were placed in cluster 1 and 11 observations were placed in cluster 2 while for k = 3, the observations were divided into 1, 12, and 96 observations per cluster and k = 4 into 1, 9, 10, and 98 observations per cluster. Due to it's high estimated upper bound ($\hat{a}$) Israel was constantly placed in its own cluster. We chose to focus on four clusters. Figure 2 shows the correlation amongst the four clusters across the three parameters. We see $\hat{a}$ was a driving factor in the cluster formation. The formation can be mostly described as very high estimated upper bound (only Israel), high upper bound (purple), middle upper bound (red), and low upper bound (blue). The majority of countries fall in the low upper bound group. Figure 3 shows the clusters across a map, with labels given to the countries shown in Figure 1 with $/hat(a)$ > 50,0000. We see these countries are all clustered in the same cluster (except for Isael). This includes the countries with the higest cases globally (USA, Spain and Italy). 
-
 
 
 Using the GMM EM algorithm for k=2 clusters, the results showed that 78 observations were placed in cluster 1 while the remaining 31 observations were in cluster 2. For k=3, clusters 1, 2, and 3 had 59, 19, and 30 observations, respectively. While for k=4, clusters 1, 2, 3, and 4 had 60, 4, 12, and 32 observations, respectively. Similar clustering was observed to the K-means results. More specifically, the clustering seemed to be defined by the upper bound from very high, to high, to middle, and to low. Most of the countries were placed in the low upper bound cluster. Notable countries such as the US and China with high max number of cases a region can reach were found in the very high upper bound cluster.
