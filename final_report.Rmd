@@ -90,7 +90,7 @@ $$\sigma_1^{2(t+1)}=\frac{\sum^n_{i=1}[(1-Z_i^{(t)})(X_i-\mu_1^{(t+1)})^2]}{\sum
 $$\sigma_2^{2(t+1)}=\frac{\sum^n_{i=1}[Z_i^{(t)}(X_i-\mu_2^{(t+1)})^2]}{\sum^n_{i=1}Z_i^{(t)}}$$
 
 
-These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. 
+These two steps are repeated iteratively until the parameters converge (change less than 0.00001) or the max number of iterations is reached. The algorithm also works for different number of clusters at which point we will have working weights for each cluster from 1 to k clusters. However, since the algorithm incorporates the results of the K-means function as starting values for the parameters, some issues arose in instances when there was only one observation for a cluster. This would lead to sigma matrices being zero. Therefore, when this occurred, we removed the sole country in the cluster and ran the algorithm again. 
 
 
 ### Results
