@@ -112,20 +112,11 @@ Although the GMM allows for soft clustering, or gives the probability of being i
 ## Discussion
 
 The first goal of the project was to fit a logistic curve to each region in order to determine the maximum number of cases a region is expected to reach, the growth rate, and the midpoint. While Newton Raphson was fairly effective in estimating the parameters, we found that it was highly sensitive to the start values. Since the objective function is not concave, the algorithm struggled to find the global extremum and careful examination of the data was needed in order to determine approriate start values. Overall, we found that our model had a good fit to the data used for training but the model largely underestimated or overestimated the number of confirmed cases past March 23. We believe the poor predictions are attributed to the limited data used to train the model. Additionally, most countries have adopted social distancing policies that are likely to "flattened the curve". In that case, our model is likely to overestimate growth rate and peak time since it does not take into account the effect of social distancing. 
-<<<<<<< HEAD
-=======
-
-Both clustering algorithms resulted in relatively similar results. Looking at figures 8 and 10, we see the expected countries clustered together. China, US, Italy and Spain have been at the forefront of this issue do to its high number of cases and we would expect them to be grouped together. However, we would not expect countries like Romania or Australia to be in this same group. Looking at more recent data shows that these were potentially missed clustered as countries with similar trajectories of the virus. It is also interesting to note the lack of trend geographically across clusters. We see some indication of clustering in Asia, Europe, and North America but they are not consistent. We suspect that with globalization the impact of physical location has diminished.
->>>>>>> d78e08e56832e766942bf88bdbcb1e74fa390a28
 
 Further we were interested in clustering the countries based on their growth curves. Both clustering algorithms used, k-means and Gaussian mixture model, resulted in relatively similar results. Looking at figures 8 and 10, we see the expected countries clustered together. China, US, Italy and Spain have been at the forefront of this issue do to its high number of cases and we would expect them to be grouped together. However, we would not expect countries like Romania or Australia to be in this same group. Looking at more recent data shows that these were potentially missed clustered as countries with similar trajectories of the virus. It is also interesting to note the lack of trend geographically across clusters. We see some indication of clustering in Asia, Europe, and North America but they are not consistent. We suspect that with globalization the impact of physical location has diminished.
 
-<<<<<<< HEAD
 We were greatly limited in our data. We were also interested in assessing the growth curve in terms of fatalities per country. We believe the number of cases is highly dependent on the ability to test which varies greatly by country and therefore fatality may be a better measure of the spread of the virus. However, we did not have many countries with a large number of fatalities at the time of data collection, March 23, and therefore prediction was near impossible. For future work, we would like to include more up to date data to help improve our models. 
 
-
-=======
->>>>>>> d78e08e56832e766942bf88bdbcb1e74fa390a28
 \newpage
 
 ## Appendix
