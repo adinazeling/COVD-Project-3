@@ -103,6 +103,7 @@ Figure 1 shows the estimated logistic growth curves from countries estimated to 
 
 In total, 63 countries had already passed their estimated midpoints of the disease. These countries included Italy (c = 51.7), Iran (c = 25.9), Germany (c = 55.5), and Spain (c = 52.7) which are all locations of large outbreaks. The remaining 46 countries had yet to reach or were approaching their disease peaks. This included the United States which were just approaching their estimated midpoint (c = 30.3). Nepal was estimated to have the longest time to disease peak (c = 284.2) while the Maldives were estimated to have the shortest time to disease peak (c = 3.56). Only Togo had a growth rate greater than 1 (b = 2.04). The next largest growth rates belong to Turkey (b = 0.867) and Cote d'Ivoire (b = 0.751). Nepal had the lowest growth rate (b = 0.00595) followed by the Vatican City (0.056).
 
+We compared our prediction results, which were modelled on data prior to March 23, with the most recent data (up to April __). Figures 2 through 6 show estimated growth curves plotted with the actual disease trajectories from Italy, the US, Israel, Togo, and Nepal. Our models closely follow the convex curves, where disease trajectories are exponentially increasing in the first few weeks. However, they diverge drastically after the first few weeks. We underpredicted the total confirmed cases in Italy, the US, Togo, and Nepal and overpredicted for Israel. The true growth rate for the US, Togo, and Nepal were also much higher than what our models predicted. Italy's curve, though not accurate, is more close to the the actual data than our other predictions. This is likely the result of there being more quality data available, as Italy had been an epicenter of the disease for quite awhile by the time our data was collected.
 
 #### Clustering
 
@@ -118,7 +119,7 @@ Using the GMM EM algorithm for k=2 clusters, the results showed that 78 observat
 
 
 
-## Discusions
+## Discussion
 
 
 
@@ -130,30 +131,59 @@ Using the GMM EM algorithm for k=2 clusters, the results showed that 78 observat
 knitr::include_graphics('./growth_curves1.jpeg')
 ```
 
+*Figure 2.*
 
-*Figure 2. k = 4 clusters scatter plots for three parameters*
-
-```{r fig2, echo = FALSE, fig.align='center', out.width = "50%", dpi = 72}
-knitr::include_graphics('./kmeans_plot.png')
+```{r fig2,  echo=FALSE, fig.align='center'}
+knitr::include_graphics('./italy_predicted_cases.jpeg')
 ```
-
 
 *Figure 3.*
 
-```{r fig3, echo = FALSE, fig.align='center', out.width = "90%"}
-knitr::include_graphics('./gkmeans_map.png')
+```{r fig3,  echo=FALSE, fig.align='center'}
+knitr::include_graphics('./us_predicted_cases.jpeg')
 ```
 
 *Figure 4.*
 
-```{r fig4, echo = FALSE, fig.align='center', out.width = "90%"}
+```{r fig4,  echo=FALSE, fig.align='center'}
+knitr::include_graphics('./israel_predicted_cases.jpeg')
+```
+
+*Figure 5.*
+
+```{r fig5,  echo=FALSE, fig.align='center'}
+knitr::include_graphics('./togo_predicted_cases.jpeg')
+```
+
+*Figure 6.*
+
+```{r fig6,  echo=FALSE, fig.align='center'}
+knitr::include_graphics('./nepal_predicted_cases.jpeg')
+```
+
+*Figure 7. k = 4 clusters scatter plots for three parameters*
+
+```{r fig7, echo = FALSE, fig.align='center', out.width = "50%", dpi = 72}
+knitr::include_graphics('./kmeans_plot.png')
+```
+
+
+*Figure 8.*
+
+```{r fig8, echo = FALSE, fig.align='center', out.width = "90%"}
+knitr::include_graphics('./gkmeans_map.png')
+```
+
+*Figure 9.*
+
+```{r fig9, echo = FALSE, fig.align='center', out.width = "90%"}
 knitr::include_graphics('./gmm_plot.png')
 ```
 
 
-*Figure 5.*
+*Figure 10.*
 
-```{r fig5, echo = FALSE, fig.align='center', out.width = "90%"}
+```{r fig10, echo = FALSE, fig.align='center', out.width = "90%"}
 knitr::include_graphics('./gmm_map.png')
 ```
 
