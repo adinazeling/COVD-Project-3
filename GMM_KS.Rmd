@@ -95,7 +95,13 @@ km4$cluster
 gmm_4k = gmm_clustering(cases_country_curves[-50,1:3], 4)
 gmm_4kdf = cbind(cases_country_curves[-50,], 
                  cluster = gmm_4k$cluster)
+
 ```
+
+
+
+
+
 
 ```{r}
 # created second EM algorithm to work with different dataset
